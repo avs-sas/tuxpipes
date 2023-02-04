@@ -4,11 +4,11 @@ DESCRIPTION = "A python tool to store and run gstreamer pipelines."
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
 
-TUXPIPES_GIT_PROTOCOL ?= "ssh"
-TUXPIPES_GIT_BRANCH ?= "master"
+TUXPIPES_GIT_PROTOCOL ?= "https"
+TUXPIPES_GIT_BRANCH ?= "main"
 
-SRC_URI = "git://git@github.com/avmihi/TuxPipes.git;branch=master;protocol=ssh;"
-SRCREV = "${AUTOREV}"i
+SRC_URI = "git://git@github.com/avmihi/TuxPipes;branch=main;protocol=https;"
+SRCREV = "${AUTOREV}"
 
 RDEPENDS:tuxpipes = " python3"
 
