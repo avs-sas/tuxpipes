@@ -1,0 +1,144 @@
+{
+    "dev": {
+        "input": "dev:v4l2src device=/dev/video#DEVNUM=3",
+        "tuxpipe": "v4l2src device=/dev/video#DEVNUM=3",
+        "elements": [
+            "v4l2src device=/dev/video#DEVNUM=3"
+        ],
+        "variables": {
+            "#DEVNUM": 3
+        },
+        "subpipelines": []
+    },
+    "file": {
+        "input": "file:filesrc location=#PATH=",
+        "tuxpipe": "filesrc location=#PATH=",
+        "elements": [
+            "filesrc location=#PATH="
+        ],
+        "variables": {
+            "#PATH": ""
+        },
+        "subpipelines": []
+    },
+    "testsrc": {
+        "input": "testsrc:videotestsrc pattern=#PATTERN=1",
+        "tuxpipe": "videotestsrc pattern=#PATTERN=1",
+        "elements": [
+            "videotestsrc pattern=#PATTERN=1"
+        ],
+        "variables": {
+            "#PATTERN": 1
+        },
+        "subpipelines": []
+    },
+    "gst": {
+        "input": "gst:gst-launch-1.0 #OPTIONS=",
+        "tuxpipe": "gst-launch-1.0 #OPTIONS=",
+        "elements": [
+            "gst-launch-1.0 #OPTIONS="
+        ],
+        "variables": {
+            "#OPTIONS": ""
+        },
+        "subpipelines": []
+    },
+    "gstdev": {
+        "input": "gst:gst-launch-1.0 v4l2src device=/dev/video#DEVNUM=3 #OPTIONS=",
+        "tuxpipe": "gst-launch-1.0 v4l2src device=/dev/video#DEVNUM=3 #OPTIONS=",
+        "elements": [
+            "gst-launch-1.0 v4l2src device=/dev/video#DEVNUM=3 #OPTIONS="
+        ],
+        "variables": {
+            "#DEVNUM": 3,
+            "#OPTIONS": ""
+        },
+        "subpipelines": []
+    },
+    "gstfile": {
+        "input": "gst:gst-launch-1.0 filesrc location=#PATH= #OPTIONS=",
+        "tuxpipe": "gst-launch-1.0 filesrc location=#PATH= #OPTIONS=",
+        "elements": [
+            "gst-launch-1.0 filesrc location=#PATH= #OPTIONS="
+        ],
+        "variables": {
+            "#PATH": "",
+            "#OPTIONS": ""
+        },
+        "subpipelines": []
+    },
+    "gsttest": {
+        "input": "gst:gst-launch-1.0 videotestsrc pattern=#PATTERN=1 #OPTIONS=",
+        "tuxpipe": "gst-launch-1.0 videotestsrc pattern=#PATTERN=1 #OPTIONS=",
+        "elements": [
+            "gst-launch-1.0 videotestsrc pattern=#PATTERN=1 #OPTIONS="
+        ],
+        "variables": {
+            "#PATTERN": 1,
+            "#OPTIONS": ""
+        },
+        "subpipelines": []
+    },
+    "vidxraw720": {
+        "input": "vidxraw720:video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1",
+        "tuxpipe": "video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1",
+        "elements": [
+            "video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1"
+        ],
+        "variables": {
+            "#WIDTH": "720",
+            "#HEIGHT": "480",
+            "#FRAMERATE": "20"
+        },
+        "subpipelines": []
+    },
+    "example": {
+        "input": "example:gstdev:vidxraw720:#CONVERTER=videoconvert:#SINK=waylandsink",
+        "tuxpipe": "gst-launch-1.0 v4l2src device=/dev/video#DEVNUM=3 #OPTIONS=:video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1:#CONVERTER=videoconvert:#SINK=waylandsink",
+        "elements": [
+            "gst",
+            "videoxraw720",
+            "#CONVERTER=videoconvert",
+            "#SINK=waylandsink"
+        ],
+        "variables": {
+            "#DEVNUM": "3",
+            "#OPTIONS": "",
+            "#WIDTH": "720",
+            "#HEIGHT": "480",
+            "#FRAMERATE": "20",
+            "#CONVERTER": "videoconvert",
+            "#SINK": "waylandsink"
+        },
+        "subpipelines": [
+            "gst",
+            "vidxraw720"
+        ]
+    },
+    "composeLR": {
+        "input": "composeLR:gst:#COMPOSITOR=compositor name=c sink_1::xpos=#XPOS1=0 sink_1::ypos=#YPOS1=0 sink_1::width=#WIDTH1=720 sink_1::height=#HEIGHT1=480 sink_2::xpos=#XPOS2=0 sink_2::ypos=#YPOS2=720 sink_2::width=#WIDTH2=720 sink_2::height=#HEIGHT2=480.#SINK=waylandsink #INPUTPIPE1= ! c.sink_1 #INPUTPIPE2=  ! c.sink2",
+        "tuxpipe": "gst-launch-1.0 #OPTIONS=:#COMPOSITOR=compositor name=c sink_1::xpos=#XPOS1=0 sink_1::ypos=#YPOS1=0 sink_1::width=#WIDTH1=720 sink_1::height=#HEIGHT1=480 sink_2::xpos=#XPOS2=0 sink_2::ypos=#YPOS2=720 sink_2::width=#WIDTH2=720 sink_2::height=#HEIGHT2=480.#SINK=waylandsink #INPUTPIPE1= ! c.sink_1 #INPUTPIPE2=  ! c.sink2",
+        "elements": [
+            "gst-launch-1.0 #OPTIONS=",
+            "#COMPOSITOR=compositor name=c sink_1::xpos=#XPOS1=0 sink_1::ypos=#YPOS1=0 sink_1::width=#WIDTH1=720 sink_1::height=#HEIGHT1=480 sink_2::xpos=#XPOS2=0 sink_2::ypos=#YPOS2=720 sink_2::width=#WIDTH2=720 sink_2::height=#HEIGHT2=480.#SINK=waylandsink #INPUTPIPE1= ! c.sink_1 #INPUTPIPE2=  ! c.sink2"
+        ],
+        "variables": {
+            "#OPTIONS": "",
+            "#COMPOSITOR": "compositor",
+            "#XPOS1": "0",
+            "#YPOS1": "0",
+            "#WIDTH1": "720",
+            "#HEIGHT1": "480",
+            "#XPOS2": "0",
+            "#YPOS2": "720",
+            "#WIDTH2": "720",
+            "#HEIGHT2": "480",
+            "#SINK": "waylandsink",
+            "#INPUTPIPE1": "",
+            "#INPUTPIPE2": ""
+        },
+        "subpipelines": [
+            "gst"
+        ]
+    }
+}

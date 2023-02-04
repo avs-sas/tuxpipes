@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tuxpipes &mdash; tuxpipes 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> tuxpipes
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tuxpipes.html">tuxpipes.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pipes.html">pipes.json</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../settings.html">settings.json</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">tuxpipes</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tuxpipes</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tuxpipes</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;tuxpipes</span>
+
+<span class="sd">This script is intended to simplify working with GStreamer/GStreamer </span>
+<span class="sd">pipelines (gst-launch-1.0).</span>
+<span class="sd">The main idea is to create pipelines more easily and to be able to </span>
+<span class="sd">reuse them by calling them with the given name. Also, it is possible </span>
+<span class="sd">to create pipelines with variables, which can be set by the user to </span>
+<span class="sd">modify existing pipelines.</span>
+
+<span class="sd">Usage:</span>
+<span class="sd"># TODO</span>
+
+<span class="sd">Options:</span>
+<span class="sd"># TODO</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span>
+<span class="kn">from</span> <span class="nn">subprocess</span> <span class="kn">import</span> <span class="n">call</span><span class="p">,</span> <span class="n">Popen</span><span class="p">,</span> <span class="n">run</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="c1"># ==================== #</span>
+<span class="c1">#       Globals        #</span>
+<span class="c1"># ==================== #</span>
+<span class="n">APPNAME</span> <span class="o">=</span> <span class="s2">&quot;TuxPipes&quot;</span>
+
+<span class="c1"># for the pipe dict</span>
+<span class="n">VARIABLES</span> <span class="o">=</span> <span class="s2">&quot;variables&quot;</span>
+<span class="n">ELEMENTS</span> <span class="o">=</span> <span class="s2">&quot;elements&quot;</span>
+<span class="n">SUBPIPELINES</span> <span class="o">=</span> <span class="s2">&quot;subpipelines&quot;</span>
+<span class="n">INPUT</span> <span class="o">=</span> <span class="s2">&quot;input&quot;</span>
+<span class="n">TUXPIPE</span> <span class="o">=</span> <span class="s2">&quot;tuxpipe&quot;</span>
+
+<span class="c1"># default pipes</span>
+<span class="n">DEFAULT_PIPES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;dev&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;dev:v4l2src device=/dev/video#DEVNUM=3&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tuxpipe&quot;</span><span class="p">:</span> <span class="s2">&quot;v4l2src device=/dev/video#DEVNUM=3&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;v4l2src device=/dev/video#DEVNUM=3&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;variables&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;#DEVNUM&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
+        <span class="s2">&quot;subpipelines&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;file:filesrc location=#PATH=&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tuxpipe&quot;</span><span class="p">:</span> <span class="s2">&quot;filesrc location=#PATH=&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;filesrc location=#PATH=&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;variables&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;#PATH&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;subpipelines&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;testsrc&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;testsrc:videotestsrc pattern=#PATTERN=1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tuxpipe&quot;</span><span class="p">:</span> <span class="s2">&quot;videotestsrc pattern=#PATTERN=1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;videotestsrc pattern=#PATTERN=1&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;variables&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;#PATTERN&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+        <span class="s2">&quot;subpipelines&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;gst&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;gst:gst-launch-1.0 #OPTIONS=&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tuxpipe&quot;</span><span class="p">:</span> <span class="s2">&quot;gst-launch-1.0 #OPTIONS=&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;gst-launch-1.0 #OPTIONS=&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;variables&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;#OPTIONS&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;subpipelines&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;gstdev&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;gst:gst-launch-1.0 v4l2src device=/dev/video#DEVNUM=3 #OPTIONS=&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tuxpipe&quot;</span><span class="p">:</span> <span class="s2">&quot;gst-launch-1.0 v4l2src device=/dev/video#DEVNUM=3 #OPTIONS=&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;gst-launch-1.0 v4l2src device=/dev/video#DEVNUM=3 #OPTIONS=&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;variables&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;#DEVNUM&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;#OPTIONS&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;subpipelines&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;gstfile&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;gst:gst-launch-1.0 filesrc location=#PATH= #OPTIONS=&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tuxpipe&quot;</span><span class="p">:</span> <span class="s2">&quot;gst-launch-1.0 filesrc location=#PATH= #OPTIONS=&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;gst-launch-1.0 filesrc location=#PATH= #OPTIONS=&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;variables&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;#PATH&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;#OPTIONS&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;subpipelines&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;gsttest&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;gst:gst-launch-1.0 videotestsrc pattern=#PATTERN=1 #OPTIONS=&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tuxpipe&quot;</span><span class="p">:</span> <span class="s2">&quot;gst-launch-1.0 videotestsrc pattern=#PATTERN=1 #OPTIONS=&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;gst-launch-1.0 videotestsrc pattern=#PATTERN=1 #OPTIONS=&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;variables&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;#PATTERN&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;#OPTIONS&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;subpipelines&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;vidxraw720&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;vidxraw720:video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tuxpipe&quot;</span><span class="p">:</span> <span class="s2">&quot;video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1&quot;</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;variables&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;#WIDTH&quot;</span><span class="p">:</span> <span class="s2">&quot;720&quot;</span><span class="p">,</span> <span class="s2">&quot;#HEIGHT&quot;</span><span class="p">:</span> <span class="s2">&quot;480&quot;</span><span class="p">,</span> <span class="s2">&quot;#FRAMERATE&quot;</span><span class="p">:</span> <span class="s2">&quot;20&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;subpipelines&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;example&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;example:gstdev:vidxraw720:#CONVERTER=videoconvert:#SINK=waylandsink&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tuxpipe&quot;</span><span class="p">:</span> <span class="s2">&quot;gst-launch-1.0 v4l2src device=/dev/video#DEVNUM=3 #OPTIONS=:video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1:#CONVERTER=videoconvert:#SINK=waylandsink&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;gst&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;videoxraw720&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#CONVERTER=videoconvert&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#SINK=waylandsink&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;variables&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;#DEVNUM&quot;</span><span class="p">:</span> <span class="s2">&quot;3&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#OPTIONS&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#WIDTH&quot;</span><span class="p">:</span> <span class="s2">&quot;720&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#HEIGHT&quot;</span><span class="p">:</span> <span class="s2">&quot;480&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#FRAMERATE&quot;</span><span class="p">:</span> <span class="s2">&quot;20&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#CONVERTER&quot;</span><span class="p">:</span> <span class="s2">&quot;videoconvert&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#SINK&quot;</span><span class="p">:</span> <span class="s2">&quot;waylandsink&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;subpipelines&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;gst&quot;</span><span class="p">,</span> <span class="s2">&quot;vidxraw720&quot;</span><span class="p">],</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;composeLR&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;composeLR:gst:#COMPOSITOR=compositor name=c sink_1::xpos=#XPOS1=0 sink_1::ypos=#YPOS1=0 sink_1::width=#WIDTH1=720 sink_1::height=#HEIGHT1=480 sink_2::xpos=#XPOS2=0 sink_2::ypos=#YPOS2=720 sink_2::width=#WIDTH2=720 sink_2::height=#HEIGHT2=480.#SINK=waylandsink #INPUTPIPE1= ! c.sink_1 #INPUTPIPE2=  ! c.sink2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tuxpipe&quot;</span><span class="p">:</span> <span class="s2">&quot;gst-launch-1.0 #OPTIONS=:#COMPOSITOR=compositor name=c sink_1::xpos=#XPOS1=0 sink_1::ypos=#YPOS1=0 sink_1::width=#WIDTH1=720 sink_1::height=#HEIGHT1=480 sink_2::xpos=#XPOS2=0 sink_2::ypos=#YPOS2=720 sink_2::width=#WIDTH2=720 sink_2::height=#HEIGHT2=480.#SINK=waylandsink #INPUTPIPE1= ! c.sink_1 #INPUTPIPE2=  ! c.sink2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;gst-launch-1.0 #OPTIONS=&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#COMPOSITOR=compositor name=c sink_1::xpos=#XPOS1=0 sink_1::ypos=#YPOS1=0 sink_1::width=#WIDTH1=720 sink_1::height=#HEIGHT1=480 sink_2::xpos=#XPOS2=0 sink_2::ypos=#YPOS2=720 sink_2::width=#WIDTH2=720 sink_2::height=#HEIGHT2=480.#SINK=waylandsink #INPUTPIPE1= ! c.sink_1 #INPUTPIPE2=  ! c.sink2&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;variables&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;#OPTIONS&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#COMPOSITOR&quot;</span><span class="p">:</span> <span class="s2">&quot;compositor&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#XPOS1&quot;</span><span class="p">:</span> <span class="s2">&quot;0&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#YPOS1&quot;</span><span class="p">:</span> <span class="s2">&quot;0&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#WIDTH1&quot;</span><span class="p">:</span> <span class="s2">&quot;720&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#HEIGHT1&quot;</span><span class="p">:</span> <span class="s2">&quot;480&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#XPOS2&quot;</span><span class="p">:</span> <span class="s2">&quot;0&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#YPOS2&quot;</span><span class="p">:</span> <span class="s2">&quot;720&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#WIDTH2&quot;</span><span class="p">:</span> <span class="s2">&quot;720&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#HEIGHT2&quot;</span><span class="p">:</span> <span class="s2">&quot;480&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#SINK&quot;</span><span class="p">:</span> <span class="s2">&quot;waylandsink&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#INPUTPIPE1&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#INPUTPIPE2&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;subpipelines&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;gst&quot;</span><span class="p">],</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="n">DEFAULT_SETTINGS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;isDefault&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;handleDupePipe&quot;</span><span class="p">:</span> <span class="s2">&quot;ask&quot;</span><span class="p">,</span> <span class="s2">&quot;blank&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+<span class="c1"># &quot;gst-launch-1.0 -v imxcompositor_g2d name=c sink_0::xpos=0 sink_0::ypos=0 sink_0::width=960 sink_0::height=1080 sink_0::keep-ratio=true sink_1::xpos=960 sink_1::ypos=0 sink_1::width=960 sink_1::height=1080 sink_1::keep-ratio=true ! waylandsink  v4l2src device=/dev/video3 ! video/x-raw,width=1920,height=1080,framerate=20/1 ! videoconvert ! c.sink_0 videotestsrc ! video/x-raw,width=1920,height=1080,framerate=20/1 ! videoconvert ! c.sink_1&quot;</span>
+
+<span class="c1"># ==================== #</span>
+<span class="c1">#   Helper functions   #</span>
+<span class="c1"># ==================== #</span>
+<div class="viewcode-block" id="colored"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.colored">[docs]</a><span class="k">def</span> <span class="nf">colored</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot; &gt; </span><span class="si">{</span><span class="n">APPNAME</span><span class="si">}</span><span class="s2">: &quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints a colored message.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    text: str</span>
+<span class="sd">        The text to print.</span>
+<span class="sd">    color: str</span>
+<span class="sd">        The color of the text.</span>
+<span class="sd">    prefix: str</span>
+<span class="sd">        The prefix of the text. (default: &quot; &gt; {APPNAME}: &quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Get the color code</span>
+    <span class="n">color_code</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;red&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[31m&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;green&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[32m&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;yellow&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[33m&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;blue&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[34m&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;magenta&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[35m&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;cyan&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[36m&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;white&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[37m&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;reset&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[0m&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="c1"># if prefix is None, set it to an empty string</span>
+    <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="c1"># Print the message</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">color_code</span><span class="p">[</span><span class="n">color</span><span class="p">]</span><span class="si">}{</span><span class="n">text</span><span class="si">}{</span><span class="n">color_code</span><span class="p">[</span><span class="s1">&#39;reset&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="success"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.success">[docs]</a><span class="k">def</span> <span class="nf">success</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot; &gt; </span><span class="si">{</span><span class="n">APPNAME</span><span class="si">}</span><span class="s2">: &quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints a success message.</span>
+
+<span class="sd">    Quick wrapper for colored(). (color: &quot;green&quot;)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    message: str</span>
+<span class="sd">        The message to print.</span>
+<span class="sd">    prefix: str</span>
+<span class="sd">        The prefix of the message. (default: &quot; &gt; {APPNAME}: &quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">colored</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">prefix</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="attempt"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.attempt">[docs]</a><span class="k">def</span> <span class="nf">attempt</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot; &gt; </span><span class="si">{</span><span class="n">APPNAME</span><span class="si">}</span><span class="s2">: &quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints an attempt message.</span>
+
+<span class="sd">    Quick wrapper for colored(). (color: &quot;cyan&quot;)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    message: str</span>
+<span class="sd">        The message to print.</span>
+<span class="sd">    prefix: str</span>
+<span class="sd">        The prefix of the message. (default: &quot; &gt; {APPNAME}: &quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">colored</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="s2">&quot;cyan&quot;</span><span class="p">,</span> <span class="n">prefix</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="info"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.info">[docs]</a><span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot; &gt; </span><span class="si">{</span><span class="n">APPNAME</span><span class="si">}</span><span class="s2">: &quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints an info message.</span>
+
+<span class="sd">    Quick wrapper for colored(). (color: &quot;white&quot;)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    message: str</span>
+<span class="sd">        The message to print.</span>
+<span class="sd">    prefix: str</span>
+<span class="sd">        The prefix of the message. (default: &quot; &gt; {APPNAME}: &quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">colored</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="s2">&quot;white&quot;</span><span class="p">,</span> <span class="n">prefix</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="warn"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.warn">[docs]</a><span class="k">def</span> <span class="nf">warn</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot; &gt; </span><span class="si">{</span><span class="n">APPNAME</span><span class="si">}</span><span class="s2">: &quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints a warning message.</span>
+
+<span class="sd">    Quick wrapper for colored(). (color: &quot;yellow&quot;)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    message: str</span>
+<span class="sd">        The message to print.</span>
+<span class="sd">    prefix: str</span>
+<span class="sd">        The prefix of the message. (default: &quot; &gt; {APPNAME}: &quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">colored</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="s2">&quot;yellow&quot;</span><span class="p">,</span> <span class="n">prefix</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="error"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.error">[docs]</a><span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot; &gt; </span><span class="si">{</span><span class="n">APPNAME</span><span class="si">}</span><span class="s2">: &quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints an error message.</span>
+
+<span class="sd">    Quick wrapper for colored(). (color: &quot;red&quot;)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    message: str</span>
+<span class="sd">        The message to print.</span>
+<span class="sd">    prefix: str</span>
+<span class="sd">        The prefix of the message. (default: &quot; &gt; {APPNAME}: &quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">colored</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">prefix</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="header_message"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.header_message">[docs]</a><span class="k">def</span> <span class="nf">header_message</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints a header message.</span>
+
+<span class="sd">    Clears the terminal and prints a header message.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    message: str</span>
+<span class="sd">        The message to print.</span>
+<span class="sd">    color: str (default: &quot;green&quot;)</span>
+<span class="sd">        The color of the message.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Get the length of the message</span>
+    <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="c1"># Clear the terminal</span>
+    <span class="c1"># call(&quot;clear&quot;) skipped for now</span>
+    <span class="c1"># Print the message in a box with the given color</span>
+    <span class="n">colored</span><span class="p">(</span><span class="s2">&quot;+&quot;</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="p">(</span><span class="n">length</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">colored</span><span class="p">(</span><span class="s2">&quot;| &quot;</span> <span class="o">+</span> <span class="n">message</span> <span class="o">+</span> <span class="s2">&quot; |&quot;</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">colored</span><span class="p">(</span><span class="s2">&quot;+&quot;</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="p">(</span><span class="n">length</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="create_default_path_dir"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.create_default_path_dir">[docs]</a><span class="k">def</span> <span class="nf">create_default_path_dir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a directory at the given path.</span>
+
+<span class="sd">    If the directory already exists, it does nothing.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path: str</span>
+<span class="sd">        The path to create the directory at.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># If the directory does not exist, create it</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ask_yes_no"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.ask_yes_no">[docs]</a><span class="k">def</span> <span class="nf">ask_yes_no</span><span class="p">(</span><span class="n">question</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Asks the user a yes/no question.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    answer: bool</span>
+<span class="sd">        True if the user answered yes, False if the user answered no.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Ask the user the question</span>
+    <span class="n">answer</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">question</span><span class="si">}</span><span class="s2"> [y/n] &quot;</span><span class="p">)</span>
+    <span class="c1"># If the user answered yes, return True</span>
+    <span class="k">if</span> <span class="n">answer</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="c1"># If the user answered no, return False</span>
+    <span class="k">elif</span> <span class="n">answer</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;n&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="c1"># If the user did not answer yes or no, ask the question again</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ask_yes_no</span><span class="p">(</span><span class="n">question</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="create_parser"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.create_parser">[docs]</a><span class="k">def</span> <span class="nf">create_parser</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses the command line arguments.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    parser: ArgumentParser</span>
+<span class="sd">        The ArgumentParser object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">()</span>
+    <span class="c1"># basic arguement for calling a pipeline</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;input_string&quot;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;?&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Input format: PIPE_ELEMENT[:PIPE_ELEMENT]*&quot;</span>
+    <span class="p">)</span>
+    <span class="c1"># option for adding a new pipeline</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-a&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--add&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Add a new pipeline based on the input string&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># argument for deleting a pipeline</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="s2">&quot;--delete&quot;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;PIPELINE_NAME&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Delete a pipeline&quot;</span>
+    <span class="p">)</span>
+    <span class="c1"># argument for renaming a pipeline</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-r&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--rename&quot;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;OLD_NAME&quot;</span><span class="p">,</span> <span class="s2">&quot;NEW_NAME&quot;</span><span class="p">),</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Rename a pipeline&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># argument for listing all pipelines with optional filter</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-l&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--list&quot;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;?&quot;</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;FILTER&quot;</span><span class="p">,</span>
+        <span class="n">const</span><span class="o">=</span><span class="s2">&quot;___&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List all pipelines&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># option to show pipeline info based on the input string</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-i&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--info&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Show pipeline info based on the input string&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># argument to create a bash script for running a pipeline</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-o&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--output&quot;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;?&quot;</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;FILE_NAME&quot;</span><span class="p">,</span>
+        <span class="n">const</span><span class="o">=</span><span class="s2">&quot;output.sh&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Create a bash script for running a pipeline&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># options yes for all questions</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-y&quot;</span><span class="p">,</span> <span class="s2">&quot;--yes&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Answer yes to all questions&quot;</span>
+    <span class="p">)</span>
+    <span class="c1"># option no for all questions</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-n&quot;</span><span class="p">,</span> <span class="s2">&quot;--no&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Answer no to all questions&quot;</span>
+    <span class="p">)</span>
+    <span class="c1"># argument for setting a pre_command.json file</span>
+    <span class="c1"># FIXME: Temporary added. Rework this.</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-c&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--commands&quot;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;?&quot;</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;FILE_NAME&quot;</span><span class="p">,</span>
+        <span class="n">const</span><span class="o">=</span><span class="s2">&quot;pre_commands.json&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Set a pre_commands.json file&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">parser</span></div>
+
+
+<span class="c1"># ==================== #</span>
+<span class="c1">#       Classes        #</span>
+<span class="c1"># ==================== #</span>
+<div class="viewcode-block" id="TuxPipes"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes">[docs]</a><span class="k">class</span> <span class="nc">TuxPipes</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The main class of TuxPipes.</span>
+
+<span class="sd">    It handles the pipelines and the variables.</span>
+<span class="sd">    Also, it handles the execution of the pipelines,</span>
+<span class="sd">    the creation of bash scripts and everything else.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input_string: str</span>
+<span class="sd">        The input string for a tuxpipe pipeline.</span>
+<span class="sd">    cwd: str</span>
+<span class="sd">        The current working directory.</span>
+<span class="sd">    pipes_json_path: str</span>
+<span class="sd">        The path to the pipes.json file.</span>
+<span class="sd">    settings_json_path: str</span>
+<span class="sd">        The path to the settings.json file.</span>
+<span class="sd">    default_path: str</span>
+<span class="sd">        The default path to the pipes.json and settings.json files.</span>
+<span class="sd">    pipes: dict</span>
+<span class="sd">        A dictionary of all pipelines.</span>
+<span class="sd">    settings: dict</span>
+<span class="sd">        A dictionary of all settings.</span>
+<span class="sd">    yes_flag: bool</span>
+<span class="sd">        A flag to answer yes to all questions. (no &gt; yes)</span>
+<span class="sd">    no_flag: bool</span>
+<span class="sd">        A flag to answer no to all questions. (no &gt; yes)</span>
+<span class="sd">    parser: ArgumentParser</span>
+<span class="sd">        The ArgumentParser object.</span>
+<span class="sd">    args: Namespace</span>
+<span class="sd">        The parsed arguments.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    # TODO</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the TuxPipes object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_string</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipes_json_path</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings_json_path</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_path</span> <span class="o">=</span> <span class="s2">&quot;/etc/defaults/tuxpipes&quot;</span>
+        <span class="n">create_default_path_dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_files</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_pipes_json</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_settings_json</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yes_to_all</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_to_all</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="n">create_parser</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TuxPipes.check_files"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.check_files">[docs]</a>    <span class="k">def</span> <span class="nf">check_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if the pipes.json and settings.json files exist.</span>
+
+<span class="sd">        First it looks in the current working directory.</span>
+<span class="sd">        If it does not find them there, it looks in the default path.</span>
+<span class="sd">        If it does not find them there, it creates them.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="s2">&quot;pipes.json&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipes_json_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cwd</span><span class="p">,</span> <span class="s2">&quot;pipes.json&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_path</span><span class="p">,</span> <span class="s2">&quot;pipes.json&quot;</span><span class="p">)):</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;No pipes.json file found in the current working directory.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipes_json_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_path</span><span class="p">,</span> <span class="s2">&quot;pipes.json&quot;</span><span class="p">)</span>
+            <span class="n">success</span><span class="p">(</span><span class="s2">&quot;Found pipes.json file in the default path.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No pipes.json file found in the default path. </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">default_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_default_pipes_json</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipes_json_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_path</span><span class="p">,</span> <span class="s2">&quot;pipes.json&quot;</span><span class="p">)</span>
+            <span class="n">success</span><span class="p">(</span><span class="s2">&quot;Created pipes.json file in the default path.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="s2">&quot;settings.json&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings_json_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cwd</span><span class="p">,</span> <span class="s2">&quot;settings.json&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_path</span><span class="p">,</span> <span class="s2">&quot;settings.json&quot;</span><span class="p">)):</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;No settings.json file found in the current working directory.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings_json_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_path</span><span class="p">,</span> <span class="s2">&quot;settings.json&quot;</span><span class="p">)</span>
+            <span class="n">success</span><span class="p">(</span><span class="s2">&quot;Found settings.json file in the default path.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;No settings.json file found in the default path. </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">default_path</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_settings_json</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings_json_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_path</span><span class="p">,</span> <span class="s2">&quot;settings.json&quot;</span><span class="p">)</span>
+            <span class="n">success</span><span class="p">(</span><span class="s2">&quot;Created settings.json file in the default path.&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TuxPipes.create_default_pipes_json"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.create_default_pipes_json">[docs]</a>    <span class="k">def</span> <span class="nf">create_default_pipes_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the default pipes.json file.</span>
+
+<span class="sd">        It will create the file at the given path</span>
+<span class="sd">        and fill it with the DEFAULT_PIPES dictionary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path: str</span>
+<span class="sd">            The path to the pipes.json file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># check if path ends with /</span>
+        <span class="k">if</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;/&quot;</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">+=</span> <span class="s2">&quot;/&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;pipes.json&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">DEFAULT_PIPES</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TuxPipes.read_pipes_json"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.read_pipes_json">[docs]</a>    <span class="k">def</span> <span class="nf">read_pipes_json</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads the pipes.json file and loads the pipelines.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pipes: dict</span>
+<span class="sd">            A dictionary of all pipelines.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes_json_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">pipes</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pipes</span></div>
+
+<div class="viewcode-block" id="TuxPipes.update_pipes_json"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.update_pipes_json">[docs]</a>    <span class="k">def</span> <span class="nf">update_pipes_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Dumps the current pipelines to the pipes.json file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes_json_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TuxPipes.create_settings_json"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.create_settings_json">[docs]</a>    <span class="k">def</span> <span class="nf">create_settings_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the settings.json file.</span>
+
+<span class="sd">        It will create the file at the given path</span>
+<span class="sd">        and fill it with the DEFAULT_SETTINGS dictionary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path: str</span>
+<span class="sd">            The path to the settings.json file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># check if path ends with /</span>
+        <span class="k">if</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;/&quot;</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">+=</span> <span class="s2">&quot;/&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;settings.json&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">DEFAULT_SETTINGS</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TuxPipes.read_settings_json"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.read_settings_json">[docs]</a>    <span class="k">def</span> <span class="nf">read_settings_json</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads the settings.json file and loads the settings.</span>
+
+<span class="sd">        # TODO Not in use yet, so not implemented yet.</span>
+<span class="sd">        Right now it just returns the default settings.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        settings: dict</span>
+<span class="sd">            A dictionary of all settings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">DEFAULT_SETTINGS</span></div>
+
+<div class="viewcode-block" id="TuxPipes.split_pipename_and_pipesting"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.split_pipename_and_pipesting">[docs]</a>    <span class="k">def</span> <span class="nf">split_pipename_and_pipesting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pipe_name</span><span class="p">,</span> <span class="n">pipe_string</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?&lt;!:):(?!:)&quot;</span><span class="p">,</span> <span class="n">input_string</span><span class="p">,</span> <span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">error</span><span class="p">(</span>
+                <span class="s2">&quot;Was not able to split the input string into a pipe name and a pipe string. - Check input format&quot;</span>
+            <span class="p">)</span>
+            <span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Required format: pipe_name:element1[:element2]*&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">input_string</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">exit</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">pipe_name</span><span class="p">,</span> <span class="n">pipe_string</span></div>
+
+<div class="viewcode-block" id="TuxPipes.create_pipeline_dict"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.create_pipeline_dict">[docs]</a>    <span class="k">def</span> <span class="nf">create_pipeline_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pipe_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a pipeline dictionary.</span>
+
+<span class="sd">        It will create a dictionary with the given pipe name</span>
+<span class="sd">        and the given pipe string.</span>
+<span class="sd">        It will read all the elements from the pipe string</span>
+<span class="sd">        to fill the dictionary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pipe_name: str</span>
+<span class="sd">            The name of the pipeline.</span>
+<span class="sd">        pipe_string: str</span>
+<span class="sd">            The pipeline string.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pipeline: dict</span>
+<span class="sd">            A dictionary with the given pipe name and the given pipe string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pipe</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">pipe</span><span class="p">[</span><span class="n">INPUT</span><span class="p">]</span> <span class="o">=</span> <span class="n">pipe_name</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="n">pipe_string</span>
+        <span class="n">elements</span><span class="p">,</span> <span class="n">subpipelines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_elements_and_subpipelines</span><span class="p">(</span><span class="n">pipe_string</span><span class="p">)</span>
+        <span class="n">pipe</span><span class="p">[</span><span class="n">ELEMENTS</span><span class="p">]</span> <span class="o">=</span> <span class="n">elements</span>
+        <span class="n">pipe</span><span class="p">[</span><span class="n">SUBPIPELINES</span><span class="p">]</span> <span class="o">=</span> <span class="n">subpipelines</span>
+        <span class="n">tuxpipe</span> <span class="o">=</span> <span class="s2">&quot;:&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span>
+        <span class="n">pipe</span><span class="p">[</span><span class="n">TUXPIPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">tuxpipe</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_variables</span><span class="p">(</span><span class="n">tuxpipe</span><span class="p">)</span>
+        <span class="n">pipe</span><span class="p">[</span><span class="n">VARIABLES</span><span class="p">]</span> <span class="o">=</span> <span class="n">variables</span>
+        <span class="k">return</span> <span class="n">pipe</span></div>
+
+<div class="viewcode-block" id="TuxPipes.get_elements_and_subpipelines"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.get_elements_and_subpipelines">[docs]</a>    <span class="k">def</span> <span class="nf">get_elements_and_subpipelines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tries to find all elements and subpipelines in the pipe string.</span>
+
+<span class="sd">        It uses a regex to split the pipe string into elements</span>
+<span class="sd">        which are separated by a single colon.</span>
+<span class="sd">        &quot;element1:element2:element3&quot;</span>
+<span class="sd">        r&quot;(?&lt;!:):(?!:)&quot;</span>
+
+<span class="sd">        All elements are added to the elements list.</span>
+<span class="sd">        If an element is a known pipeline it will be added to the</span>
+<span class="sd">        subpipelines list. (but only once)</span>
+<span class="sd">        Also all elements of that subpipeline will be added to the</span>
+<span class="sd">        elements list of the current pipeline.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pipe_string: str</span>
+<span class="sd">            The pipeline string.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        elements: list</span>
+<span class="sd">            A list of all elements.</span>
+<span class="sd">        subpipelines: list</span>
+<span class="sd">            A list of all subpipelines.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># split by single colon</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?&lt;!:):(?!:)&quot;</span><span class="p">,</span> <span class="n">pipe_string</span><span class="p">)</span>
+        <span class="n">elements</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">subpipelines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">part</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">:</span>
+                <span class="n">elements</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">part</span><span class="p">][</span><span class="n">ELEMENTS</span><span class="p">])</span>
+                <span class="c1"># Check if subpipeline is already in the list</span>
+                <span class="k">if</span> <span class="n">part</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">subpipelines</span><span class="p">:</span>
+                    <span class="n">subpipelines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">elements</span><span class="p">,</span> <span class="n">subpipelines</span></div>
+
+<div class="viewcode-block" id="TuxPipes.get_variables"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.get_variables">[docs]</a>    <span class="k">def</span> <span class="nf">get_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tuxpipe</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds all variables in the tuxpipe string.</span>
+
+<span class="sd">        It uses a regex to find all variables and their default values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tuxpipe: str</span>
+<span class="sd">            The tuxpipe string.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        variables: dict</span>
+<span class="sd">            A dictionary of all variables and their default values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">paris</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;#.*?=[^(.|,|:|#| )]*.*?&quot;</span><span class="p">,</span> <span class="n">tuxpipe</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">pari</span> <span class="ow">in</span> <span class="n">paris</span><span class="p">:</span>
+            <span class="n">variable</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">pari</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
+            <span class="n">variables</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">variables</span></div>
+
+<div class="viewcode-block" id="TuxPipes.add_pipeline"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.add_pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">add_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds a pipeline to the pipes.json file.</span>
+
+<span class="sd">        It will split the input string into a pipe name and a pipe string.</span>
+<span class="sd">        Then it will create a pipeline dictionary with the pipe name and the pipe string.</span>
+<span class="sd">        Then it will add the pipeline dictionary to the pipes dictionary.</span>
+<span class="sd">        Then it will update the pipes.json file.</span>
+
+<span class="sd">        If the pipeline which was overwritten was a subpipeline of another pipeline</span>
+<span class="sd">        it will update the subpipelines list of that pipeline.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_string: str</span>
+<span class="sd">            The input string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">overwrite</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">pipe_name</span><span class="p">,</span> <span class="n">pipe_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">split_pipename_and_pipesting</span><span class="p">(</span><span class="n">input_string</span><span class="p">)</span>
+        <span class="c1"># check if pipe already exists</span>
+        <span class="k">if</span> <span class="n">pipe_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There is already a pipeline with the name </span><span class="si">{</span><span class="n">pipe_name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipe_name</span><span class="p">][</span><span class="n">INPUT</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">yes_to_all</span><span class="p">:</span>
+                <span class="n">info</span><span class="p">(</span><span class="s2">&quot;Yes flag is set.&quot;</span><span class="p">)</span>
+                <span class="n">overwrite</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_to_all</span><span class="p">:</span>
+                <span class="n">attempt</span><span class="p">(</span><span class="s2">&quot;No flag is set. Not overwriting pipeline.&quot;</span><span class="p">)</span>
+                <span class="k">return</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># ask the user</span>
+                <span class="n">overwrite</span> <span class="o">=</span> <span class="n">ask_yes_no</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Do you want to overwrite the pipeline </span><span class="si">{</span><span class="n">pipe_name</span><span class="si">}</span><span class="s2">?&quot;</span>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="n">overwrite</span><span class="p">:</span>
+            <span class="n">attempt</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Overwriting pipeline </span><span class="si">{</span><span class="n">pipe_name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="n">new_pipe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_pipeline_dict</span><span class="p">(</span><span class="n">pipe_name</span><span class="p">,</span> <span class="n">pipe_string</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipe_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_pipe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_pipes_json</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">overwrite</span><span class="p">:</span>
+            <span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pipe_name</span><span class="si">}</span><span class="s2"> was updated in pipes.json&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pipe_name</span><span class="si">}</span><span class="s2"> was added to pipes.json&quot;</span><span class="p">)</span>
+            <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipe_name</span><span class="p">][</span><span class="n">INPUT</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># if overwrite find pipes to update</span>
+        <span class="k">if</span> <span class="n">overwrite</span><span class="p">:</span>
+            <span class="n">pipes_to_update</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">pipe</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">pipe_name</span> <span class="ow">in</span> <span class="n">value</span><span class="p">[</span><span class="n">SUBPIPELINES</span><span class="p">]:</span>
+                    <span class="n">pipes_to_update</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pipes_to_update</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;There are </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">pipes_to_update</span><span class="p">)</span><span class="si">}</span><span class="s2"> pipelines that use </span><span class="si">{</span><span class="n">pipe_name</span><span class="si">}</span><span class="s2"> as subpipeline.&quot;</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">yes_to_all</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># FIXME ask the suer or find another way</span>
+                <span class="k">for</span> <span class="n">pipe</span> <span class="ow">in</span> <span class="n">pipes_to_update</span><span class="p">:</span>
+                    <span class="n">attempt</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Updating </span><span class="si">{</span><span class="n">pipe</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_pipeline</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pipe</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipe</span><span class="p">][</span><span class="n">INPUT</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TuxPipes.remove_subpipeline"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.remove_subpipeline">[docs]</a>    <span class="k">def</span> <span class="nf">remove_subpipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">subpipeline</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes a subpipeline from a pipeline.</span>
+
+<span class="sd">        It reads in the parts of the pipeline string.</span>
+<span class="sd">        Then it creates a new list of parts without the subpipeline.</span>
+<span class="sd">        Then it creates a new pipeline dictionary with the new parts.</span>
+<span class="sd">        Then it updates the pipes.json file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pipe_name: str</span>
+<span class="sd">            The name of the pipeline.</span>
+<span class="sd">        subpipeline: str</span>
+<span class="sd">            The name of the subpipeline.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">input_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipe_name</span><span class="p">][</span><span class="n">INPUT</span><span class="p">]</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?&lt;!:):(?!:)&quot;</span><span class="p">,</span> <span class="n">input_string</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">new_parts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">part</span> <span class="o">==</span> <span class="n">subpipeline</span><span class="p">:</span>
+                <span class="n">new_parts</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">subpipeline</span><span class="p">][</span><span class="n">ELEMENTS</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+        <span class="n">pipe_string</span> <span class="o">=</span> <span class="s2">&quot;:&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_parts</span><span class="p">)</span>
+        <span class="n">tmp_pipe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_pipeline_dict</span><span class="p">(</span><span class="n">pipe_name</span><span class="p">,</span> <span class="n">pipe_string</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span><span class="p">[</span><span class="n">pipe_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_pipe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_pipes_json</span><span class="p">()</span>
+        <span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pipe_name</span><span class="si">}</span><span class="s2"> was updated in pipes.json&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TuxPipes.delete_pipeline"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.delete_pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">delete_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deletes a pipeline from the pipes.json file.</span>
+
+<span class="sd">        It will remove the pipeline from the pipes dictionary.</span>
+<span class="sd">        Then it will update the pipes.json file.</span>
+<span class="sd">        It checks if the pipe is used as a subpipeline in another pipeline.</span>
+<span class="sd">        If so, it will ask the user if he wants to remove it or keep it.</span>
+<span class="sd">        It might be usefull to keep it, if you are going to add it again.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pipe_name: str</span>
+<span class="sd">            The name of the pipeline.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check if pipe with given name exist</span>
+        <span class="k">if</span> <span class="n">pipe_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There is no pipeline with the name </span><span class="si">{</span><span class="n">pipe_name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="c1"># Check if pipe is used as subpipeline</span>
+        <span class="k">for</span> <span class="n">pipe</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">pipe_name</span> <span class="ow">in</span> <span class="n">value</span><span class="p">[</span><span class="n">SUBPIPELINES</span><span class="p">]:</span>
+                <span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pipe_name</span><span class="si">}</span><span class="s2"> is used as subpipeline in </span><span class="si">{</span><span class="n">pipe</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+                <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipe</span><span class="p">][</span><span class="n">INPUT</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">yes_to_all</span><span class="p">:</span>
+                    <span class="n">info</span><span class="p">(</span><span class="s2">&quot;Yes flag is set.&quot;</span><span class="p">)</span>
+                    <span class="n">attempt</span><span class="p">(</span><span class="s2">&quot;Removing subpipeline from pipeline.&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">remove_subpipeline</span><span class="p">(</span><span class="n">pipe</span><span class="p">,</span> <span class="n">pipe_name</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_to_all</span><span class="p">:</span>
+                    <span class="n">info</span><span class="p">(</span><span class="s2">&quot;No flag is set.&quot;</span><span class="p">)</span>
+                    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Keeping </span><span class="si">{</span><span class="n">pipe_name</span><span class="si">}</span><span class="s2"> as subpipeline in </span><span class="si">{</span><span class="n">pipe</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">user_input</span> <span class="o">=</span> <span class="n">ask_yes_no</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Do you want to remove </span><span class="si">{</span><span class="n">pipe_name</span><span class="si">}</span><span class="s2"> as subpipeline from </span><span class="si">{</span><span class="n">pipe</span><span class="si">}</span><span class="s2">?&quot;</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">user_input</span><span class="p">:</span>
+                        <span class="n">attempt</span><span class="p">(</span><span class="s2">&quot;Removing subpipeline from pipeline.&quot;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">remove_subpipeline</span><span class="p">(</span><span class="n">pipe</span><span class="p">,</span> <span class="n">pipe_name</span><span class="p">)</span>
+
+        <span class="c1"># Delete pipe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">pipe_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># None prevents KeyError</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_pipes_json</span><span class="p">()</span>
+        <span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pipe_name</span><span class="si">}</span><span class="s2"> was removed from pipes.json&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TuxPipes.change_subpipe_name"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.change_subpipe_name">[docs]</a>    <span class="k">def</span> <span class="nf">change_subpipe_name</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">pipe_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">subpipe_old_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">subpipe_new_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function changes the name of a subpipeline in a pipeline.</span>
+
+<span class="sd">        It changes the name in the subpipelines list.</span>
+<span class="sd">        It changes the name in the input string.</span>
+<span class="sd">        It updates the pipes.json file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pipe_name: str</span>
+<span class="sd">            The name of the pipeline.</span>
+<span class="sd">        subpipe_old_name: str</span>
+<span class="sd">            The old name of the subpipeline.</span>
+<span class="sd">        subpipe_new_name: str</span>
+<span class="sd">            The new name of the subpipeline.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Change subpipeline entry</span>
+        <span class="n">tmp_subpipelines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipe_name</span><span class="p">][</span><span class="n">SUBPIPELINES</span><span class="p">]</span>
+        <span class="n">tmp_subpipelines</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="nb">map</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">subpipe_old_name</span><span class="p">,</span> <span class="n">subpipe_new_name</span><span class="p">),</span>
+                <span class="n">tmp_subpipelines</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipe_name</span><span class="p">][</span><span class="n">SUBPIPELINES</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_subpipelines</span>
+        <span class="c1"># Change input string</span>
+        <span class="n">tmp_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipe_name</span><span class="p">][</span><span class="n">INPUT</span><span class="p">]</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?&lt;!:):(?!:)&quot;</span><span class="p">,</span> <span class="n">tmp_input</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parts</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">part</span> <span class="o">==</span> <span class="n">subpipe_old_name</span><span class="p">:</span>
+                <span class="n">parts</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">subpipe_new_name</span>
+        <span class="n">tmp_input</span> <span class="o">=</span> <span class="s2">&quot;:&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipe_name</span><span class="p">][</span><span class="n">INPUT</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_input</span>
+        <span class="c1"># Update pipes.json</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_pipes_json</span><span class="p">()</span>
+        <span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subpipe_old_name</span><span class="si">}</span><span class="s2"> was changed to </span><span class="si">{</span><span class="n">subpipe_new_name</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">pipe_name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TuxPipes.rename_pipeline"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.rename_pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">rename_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">new_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Renames a pipeline.</span>
+
+<span class="sd">        It changes the name in the pipes dictionary.</span>
+<span class="sd">        Then it updates the pipes.json file.</span>
+<span class="sd">        It will also check if the pipeline is used as a subpipeline in</span>
+<span class="sd">        another pipeline and change the name there as well.</span>
+<span class="sd">        (if the user wants to)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        old_name: str</span>
+<span class="sd">            The old name of the pipeline.</span>
+<span class="sd">        new_name: str</span>
+<span class="sd">            The new name of the pipeline.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check if pipe with given name exist</span>
+        <span class="k">if</span> <span class="n">old_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">:</span>
+            <span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There is no pipeline with the name </span><span class="si">{</span><span class="n">old_name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">exit</span><span class="p">()</span>
+        <span class="c1"># Check if pipe with new name already exist</span>
+        <span class="k">if</span> <span class="n">new_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">:</span>
+            <span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There is already a pipeline with the name </span><span class="si">{</span><span class="n">new_name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">new_name</span><span class="p">][</span><span class="n">INPUT</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">info</span><span class="p">(</span><span class="s2">&quot;Rename the old pipeline first or delete it.&quot;</span><span class="p">)</span>
+            <span class="n">exit</span><span class="p">()</span>
+        <span class="c1"># Check if pipe gets uses as subpipeline</span>
+        <span class="k">for</span> <span class="n">pipe</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">old_name</span> <span class="ow">in</span> <span class="n">value</span><span class="p">[</span><span class="n">SUBPIPELINES</span><span class="p">]:</span>
+                <span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">old_name</span><span class="si">}</span><span class="s2"> is used as subpipeline in </span><span class="si">{</span><span class="n">pipe</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+                <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipe</span><span class="p">][</span><span class="n">INPUT</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">yes_to_all</span><span class="p">:</span>
+                    <span class="n">info</span><span class="p">(</span><span class="s2">&quot;Yes flag is set.&quot;</span><span class="p">)</span>
+                    <span class="n">attempt</span><span class="p">(</span><span class="s2">&quot;Changing subpipeline name in pipeline.&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">change_subpipe_name</span><span class="p">(</span><span class="n">pipe</span><span class="p">,</span> <span class="n">old_name</span><span class="p">,</span> <span class="n">new_name</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_to_all</span><span class="p">:</span>
+                    <span class="n">info</span><span class="p">(</span><span class="s2">&quot;No flag is set.&quot;</span><span class="p">)</span>
+                    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Keeping </span><span class="si">{</span><span class="n">old_name</span><span class="si">}</span><span class="s2"> as subpipeline in </span><span class="si">{</span><span class="n">pipe</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">user_input</span> <span class="o">=</span> <span class="n">ask_yes_no</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Do you want to change </span><span class="si">{</span><span class="n">old_name</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">new_name</span><span class="si">}</span><span class="s2"> as subpipeline in </span><span class="si">{</span><span class="n">pipe</span><span class="si">}</span><span class="s2">?&quot;</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">user_input</span><span class="p">:</span>
+                        <span class="n">attempt</span><span class="p">(</span><span class="s2">&quot;Changing subpipeline name in pipeline.&quot;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">change_subpipe_name</span><span class="p">(</span><span class="n">pipe</span><span class="p">,</span> <span class="n">old_name</span><span class="p">,</span> <span class="n">new_name</span><span class="p">)</span>
+        <span class="c1"># Change name (delete old and inser new)</span>
+        <span class="n">tmp_pipe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">old_name</span><span class="p">]</span>
+        <span class="n">tmp_input</span> <span class="o">=</span> <span class="n">tmp_pipe</span><span class="p">[</span><span class="n">INPUT</span><span class="p">]</span>
+        <span class="n">tmp_input</span> <span class="o">=</span> <span class="n">tmp_input</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">old_name</span><span class="p">,</span> <span class="n">new_name</span><span class="p">)</span>
+        <span class="n">tmp_pipe</span><span class="p">[</span><span class="n">INPUT</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_input</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">old_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># None prevents KeyError</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">new_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_pipe</span>
+        <span class="c1"># Save changes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_pipes_json</span><span class="p">()</span>
+        <span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">old_name</span><span class="si">}</span><span class="s2"> was changed to </span><span class="si">{</span><span class="n">new_name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TuxPipes.list_pipelines"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.list_pipelines">[docs]</a>    <span class="k">def</span> <span class="nf">list_pipelines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Lists all pipelines.</span>
+
+<span class="sd">        It prints the name of the pipeline and the input string.</span>
+<span class="sd">        The output can be filtered with an optional filter.</span>
+<span class="sd">        This will only show pipelines that contain the filter</span>
+<span class="sd">        in their names or input strings.</span>
+<span class="sd">        Filter: &quot;___&quot; means None (for now)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        query: str</span>
+<span class="sd">            The filter for the output.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">query</span> <span class="o">==</span> <span class="s2">&quot;___&quot;</span><span class="p">:</span>
+            <span class="n">query</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">query</span><span class="p">:</span>
+            <span class="n">attempt</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Filter: </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="se">\n</span><span class="s2">===================&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">attempt</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;All pipelines:</span><span class="se">\n</span><span class="s2">===================&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">tmp_pipes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span>
+        <span class="k">for</span> <span class="n">pipe</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">tmp_pipes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">query</span> <span class="ow">and</span> <span class="n">query</span> <span class="ow">in</span> <span class="n">pipe</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">query</span><span class="p">:</span>
+                <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pipe</span><span class="si">}</span><span class="s2">:</span><span class="se">\n\t</span><span class="si">{</span><span class="n">value</span><span class="p">[</span><span class="n">INPUT</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">query</span> <span class="ow">and</span> <span class="n">query</span> <span class="ow">in</span> <span class="n">value</span><span class="p">[</span><span class="n">INPUT</span><span class="p">])</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">query</span><span class="p">:</span>
+                <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pipe</span><span class="si">}</span><span class="s2">:</span><span class="se">\n\t</span><span class="si">{</span><span class="n">value</span><span class="p">[</span><span class="n">INPUT</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TuxPipes.show_pipe_info"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.show_pipe_info">[docs]</a>    <span class="k">def</span> <span class="nf">show_pipe_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Shows information about a pipeline.</span>
+
+<span class="sd">        It prints the name of the pipeline, the input string and</span>
+<span class="sd">        all subpipelines.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pipe_name: str</span>
+<span class="sd">            The name of the pipeline.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pipe_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">:</span>
+            <span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There is no pipeline with the name </span><span class="si">{</span><span class="n">pipe_name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">exit</span><span class="p">()</span>
+        <span class="n">attempt</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pipeline: </span><span class="si">{</span><span class="n">pipe_name</span><span class="si">}</span><span class="se">\n</span><span class="s2">===================&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input:</span><span class="se">\n\t</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipe_name</span><span class="p">][</span><span class="n">INPUT</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Subpipelines:</span><span class="se">\n\t</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipe_name</span><span class="p">][</span><span class="n">SUBPIPELINES</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TuxPipes.create_output_file"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.create_output_file">[docs]</a>    <span class="k">def</span> <span class="nf">create_output_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe_string</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function creates a bash script file.</span>
+
+<span class="sd">        It contains all the commands that are needed to execute the pipeline.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pipe_string: str</span>
+<span class="sd">            The pipeline string.</span>
+<span class="sd">        output_file: str</span>
+<span class="sd">            The name of the output file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gstreamer_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_gstreamer_string</span><span class="p">(</span><span class="n">pipe_string</span><span class="p">)</span>
+        <span class="p">(</span>
+            <span class="n">gststreamer_string</span><span class="p">,</span>
+            <span class="n">pre_commands</span><span class="p">,</span>
+            <span class="n">post_commands</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_command_execution</span><span class="p">(</span><span class="n">gstreamer_string</span><span class="p">)</span>
+        <span class="n">attempt</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating output file: </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">com</span> <span class="ow">in</span> <span class="n">pre_commands</span><span class="p">:</span>
+                <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="n">com</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">com</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="n">gststreamer_string</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">gststreamer_string</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">com</span> <span class="ow">in</span> <span class="n">post_commands</span><span class="p">:</span>
+                <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="n">com</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">com</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output file created: </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TuxPipes.execute_commands"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.execute_commands">[docs]</a>    <span class="k">def</span> <span class="nf">execute_commands</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pre_commands</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">post_commands</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        # TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">pre_com</span> <span class="ow">in</span> <span class="n">pre_commands</span><span class="p">:</span>
+            <span class="n">attempt</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Executing pre command:</span><span class="se">\n\t</span><span class="s2"> </span><span class="si">{</span><span class="n">pre_com</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">Popen</span><span class="p">(</span><span class="n">pre_com</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+
+        <span class="n">attempt</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Executing command:</span><span class="se">\n\t</span><span class="s2"> </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">(</span><span class="n">command</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">post_com</span> <span class="ow">in</span> <span class="n">post_commands</span><span class="p">:</span>
+            <span class="n">attempt</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Executing post command:</span><span class="se">\n\t</span><span class="s2"> </span><span class="si">{</span><span class="n">post_com</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">Popen</span><span class="p">(</span><span class="n">post_com</span><span class="o">.</span><span class="n">split</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="TuxPipes.create_gstreamer_string"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.create_gstreamer_string">[docs]</a>    <span class="k">def</span> <span class="nf">create_gstreamer_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function creates a gstreamer string.</span>
+
+<span class="sd">        It takes a pipeline string and creates a gstreamer string</span>
+<span class="sd">        that can be executed by the gstreamer command line tool.</span>
+<span class="sd">        It tries to find all variables of known pipelines or</span>
+<span class="sd">        provided new variables with values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pipe_string: str</span>
+<span class="sd">            The pipeline string.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        gstreamer_string: str</span>
+<span class="sd">            The gstreamer string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tux_pipes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">gstreamer_string</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?&lt;!:):(?!:)&quot;</span><span class="p">,</span> <span class="n">pipe_string</span><span class="p">):</span>
+            <span class="n">input_variables</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">element_variables</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="c1"># Check if variable input values are provided</span>
+            <span class="c1"># (only works for know pipelines)</span>
+            <span class="k">if</span> <span class="s2">&quot;(&quot;</span> <span class="ow">in</span> <span class="n">element</span><span class="p">:</span>
+                <span class="n">element</span><span class="p">,</span> <span class="n">input_variables_string</span> <span class="o">=</span> <span class="n">element</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">)</span>
+                <span class="n">input_variables</span> <span class="o">=</span> <span class="n">input_variables_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">)</span>
+                <span class="c1"># Check if lement is known pipe</span>
+                <span class="k">if</span> <span class="n">element</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Variables provided for unknown pipe: </span><span class="si">{</span><span class="n">element</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">exit</span><span class="p">()</span>
+                <span class="n">element_tuxpipe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">element</span><span class="p">][</span><span class="n">TUXPIPE</span><span class="p">]</span>
+                <span class="n">element_variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">element</span><span class="p">][</span><span class="n">VARIABLES</span><span class="p">]</span>
+            <span class="c1"># no inputs provided</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">element_tuxpipe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">element</span><span class="p">][</span><span class="n">TUXPIPE</span><span class="p">]</span>
+                    <span class="n">element_variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">element</span><span class="p">][</span><span class="n">VARIABLES</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">element_tuxpipe</span> <span class="o">=</span> <span class="n">element</span>
+
+            <span class="c1"># Separate values</span>
+            <span class="n">specific_values</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">unspecific_values</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">input_variables</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;#&quot;</span> <span class="ow">in</span> <span class="n">val</span><span class="p">:</span>
+                    <span class="n">specific_values</span><span class="p">[</span><span class="n">val</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">unspecific_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+            <span class="c1"># insert specifc values first</span>
+            <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">specific_values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">element_variables</span><span class="p">:</span>
+                    <span class="n">element_tuxpipe</span> <span class="o">=</span> <span class="n">element_tuxpipe</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+                        <span class="n">var</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">+</span> <span class="n">element_variables</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">val</span>
+                    <span class="p">)</span>
+                    <span class="c1"># remove uses variable</span>
+                    <span class="n">element_variables</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+            <span class="c1"># insert unspecific values</span>
+            <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">default_value</span> <span class="ow">in</span> <span class="n">element_variables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">current_value</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                <span class="n">replacement</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">default_value</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unspecific_values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">current_value</span> <span class="o">=</span> <span class="n">unspecific_values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">current_value</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                    <span class="n">element_tuxpipe</span> <span class="o">=</span> <span class="n">element_tuxpipe</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+                        <span class="n">replacement</span><span class="p">,</span> <span class="n">current_value</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">element_tuxpipe</span> <span class="o">=</span> <span class="n">element_tuxpipe</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+                        <span class="n">replacement</span><span class="p">,</span> <span class="n">default_value</span>
+                    <span class="p">)</span>
+
+            <span class="n">tux_pipes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element_tuxpipe</span><span class="p">)</span>
+
+        <span class="c1"># combine tux pipes to one tuxpipe and create gstreamer pipeline</span>
+        <span class="n">tuxpipe</span> <span class="o">=</span> <span class="s2">&quot;:&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tux_pipes</span><span class="p">)</span>
+        <span class="n">tmp_elements</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?&lt;!:):(?!:)&quot;</span><span class="p">,</span> <span class="n">tuxpipe</span><span class="p">)</span>
+        <span class="n">gstreamer_string</span> <span class="o">=</span> <span class="s2">&quot; ! &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_elements</span><span class="p">)</span>
+        <span class="n">gstreamer_string</span> <span class="o">=</span> <span class="n">gstreamer_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;  !&quot;</span><span class="p">,</span> <span class="s2">&quot; !&quot;</span><span class="p">)</span>
+        <span class="n">gstreamer_string</span> <span class="o">=</span> <span class="n">gstreamer_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+            <span class="s2">&quot;gst-launch-1.0 ! &quot;</span><span class="p">,</span> <span class="s2">&quot;gst-launch-1.0 &quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">gstreamer_string</span></div>
+
+<div class="viewcode-block" id="TuxPipes.prepare_command_execution"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.prepare_command_execution">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_command_execution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gstreamer_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function prepares the command execution.</span>
+
+<span class="sd">        It takes a gstreamer string and creates a list of commands</span>
+<span class="sd">        that have to be executed before and after the gstreamer command.</span>
+<span class="sd">        It also tries to do some basic checks on the commands.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gstreamer_string: str</span>
+<span class="sd">            The gstreamer string.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pre_commands: list</span>
+<span class="sd">            The list of pre commands.</span>
+<span class="sd">        post_commands: list</span>
+<span class="sd">            The list of post commands.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check for specific rules when using certain sinks, sources, elements</span>
+        <span class="c1"># =&gt; Created needed pre and post commands</span>
+        <span class="n">pre_commands</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">post_commands</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># kmssink</span>
+        <span class="k">if</span> <span class="s2">&quot;kmssink&quot;</span> <span class="ow">in</span> <span class="n">gstreamer_string</span> <span class="ow">or</span> <span class="s2">&quot;kmscube&quot;</span> <span class="ow">in</span> <span class="n">gstreamer_string</span><span class="p">:</span>
+            <span class="n">pre_commands</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;systemctl stop weston&quot;</span><span class="p">)</span>
+            <span class="n">post_commands</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;systemctl start weston&quot;</span><span class="p">)</span>
+            <span class="n">gstreamer_string</span> <span class="o">=</span> <span class="n">gstreamer_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;kmssink&quot;</span><span class="p">,</span> <span class="s2">&quot;kmssink can-scale=false&quot;</span><span class="p">)</span>
+
+        <span class="c1"># FIXME this was added for the development on xilinx boards</span>
+        <span class="c1"># Might need rework or removal</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">commands</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">commands</span><span class="p">)</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">commands</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+            <span class="n">coms</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">pre_commands</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">coms</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">gstreamer_string</span><span class="p">,</span> <span class="n">pre_commands</span><span class="p">,</span> <span class="n">post_commands</span></div>
+
+<div class="viewcode-block" id="TuxPipes.run_input_string"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.run_input_string">[docs]</a>    <span class="k">def</span> <span class="nf">run_input_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">gstreamer_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_gstreamer_string</span><span class="p">(</span><span class="n">pipe_string</span><span class="p">)</span>
+        <span class="n">gstreamer_string</span><span class="p">,</span> <span class="n">pre_commands</span><span class="p">,</span> <span class="n">post_commands</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_command_execution</span><span class="p">(</span>
+            <span class="n">gstreamer_string</span>
+        <span class="p">)</span>  
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute_commands</span><span class="p">(</span><span class="n">gstreamer_string</span><span class="p">,</span> <span class="n">pre_commands</span><span class="p">,</span> <span class="n">post_commands</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TuxPipes.check_args"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.check_args">[docs]</a>    <span class="k">def</span> <span class="nf">check_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check the commandline arguments.</span>
+
+<span class="sd">        First it checks if there is an input string if there are no arguments.</span>
+<span class="sd">        Then it sets the flags.</span>
+<span class="sd">        Then it runs through the possible options and arguments</span>
+<span class="sd">        and calls the corresponding functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># check if there is an input string if there are no arguments</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">input_string</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+            <span class="n">exit</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">input_string</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">input_string</span>
+
+        <span class="c1"># flags</span>
+        <span class="c1"># No &gt; Yes</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">yes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">yes_to_all</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">no_to_all</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">no</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">no_to_all</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">yes_to_all</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># options and arguments</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">add</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">input_string</span><span class="p">:</span>
+                <span class="n">error</span><span class="p">(</span><span class="s2">&quot;No input_string/pipe given.&quot;</span><span class="p">)</span>
+                <span class="n">exit</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">input_string</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">delete</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delete_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">delete</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">rename</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rename_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">rename</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">rename</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">list_pipelines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">list</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">input_string</span><span class="p">:</span>
+                <span class="n">error</span><span class="p">(</span><span class="s2">&quot;No input_string/pipe given.&quot;</span><span class="p">)</span>
+                <span class="n">exit</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">show_pipe_info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_string</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_string</span><span class="p">:</span>
+                <span class="n">error</span><span class="p">(</span><span class="s2">&quot;No input_string/pipe given.&quot;</span><span class="p">)</span>
+                <span class="n">exit</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_output_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_string</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run_input_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_string</span><span class="p">)</span>
+
+        <span class="n">success</span><span class="p">(</span><span class="s2">&quot;Done.&quot;</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># ==================== #</span>
+<span class="c1">#         Main         #</span>
+<span class="c1"># ==================== #</span>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The main function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">header_message</span><span class="p">(</span><span class="s2">&quot;TuxPipes&quot;</span><span class="p">)</span>
+    <span class="n">tp</span> <span class="o">=</span> <span class="n">TuxPipes</span><span class="p">()</span>
+    <span class="n">tp</span><span class="o">.</span><span class="n">check_args</span><span class="p">()</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Michael Hierl.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
