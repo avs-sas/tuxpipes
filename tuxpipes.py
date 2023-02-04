@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""tuxpipes
+"""
+tuxpipes
+========
 
 This script is intended to simplify working with GStreamer/GStreamer 
 pipelines (gst-launch-1.0).
@@ -9,10 +11,35 @@ to create pipelines with variables, which can be set by the user to
 modify existing pipelines.
 
 Usage:
-# TODO
+======
+The program expects at least one option/argument or an input_string
+(pipeline)
 
+        "python tuxpipes.py [options] [input_string]"
+
+        "tuxpipes [options] [input_string]"
+    
 Options:
-# TODO
+========
+-h, --help                          Show the help message and exit
+
+-a, --add  <input_string>           Add a new pipeline
+
+-d, --delete <pipe_name>            Delete a pipeline
+
+-r, --rename <old_name new_name>    Rename a pipeline
+
+-l, --list <filter>                 List all pipelines
+
+-i, --info <pipe_name>              Show information about a pipeline
+
+-o, --output <pipe_name>            Create an output file containing the pipeline command
+
+-y, --yes                           Answer yes to all questions
+
+-n, --no                            Answer no to all questions
+
+-c, --commands <FILENAME>           Specify a pre commands file (executed before the pipeline)
 
 """
 
@@ -23,19 +50,15 @@ import sys
 import re
 import json
 
-# ==================== #
-#       Globals        #
-# ==================== #
-APPNAME = "TuxPipes"
-
-# for the pipe dict
+# Global variables
+# ================
+APPNAME = "tuxpipes"
 VARIABLES = "variables"
 ELEMENTS = "elements"
 SUBPIPELINES = "subpipelines"
 INPUT = "input"
 TUXPIPE = "tuxpipe"
 
-# default pipes
 DEFAULT_PIPES = {
     "dev": {
         "input": "dev:v4l2src device=/dev/video#DEVNUM=3",
@@ -144,9 +167,8 @@ DEFAULT_PIPES = {
 DEFAULT_SETTINGS = {"isDefault": True, "handleDupePipe": "ask", "blank": None}
 # "gst-launch-1.0 -v imxcompositor_g2d name=c sink_0::xpos=0 sink_0::ypos=0 sink_0::width=960 sink_0::height=1080 sink_0::keep-ratio=true sink_1::xpos=960 sink_1::ypos=0 sink_1::width=960 sink_1::height=1080 sink_1::keep-ratio=true ! waylandsink  v4l2src device=/dev/video3 ! video/x-raw,width=1920,height=1080,framerate=20/1 ! videoconvert ! c.sink_0 videotestsrc ! video/x-raw,width=1920,height=1080,framerate=20/1 ! videoconvert ! c.sink_1"
 
-# ==================== #
-#   Helper functions   #
-# ==================== #
+# Helpers
+# =======
 def colored(text, color, prefix=f" > {APPNAME}: "):
     """
     Prints a colored message.
@@ -398,10 +420,10 @@ def create_parser():
 
     return parser
 
-
-# ==================== #
-#       Classes        #
-# ==================== #
+"""
+Classes
+=======
+"""
 class TuxPipes:
     """
     The main class of TuxPipes.
@@ -437,7 +459,52 @@ class TuxPipes:
 
     Methods
     -------
-    # TODO
+    check_files()
+        Checks if the pipes.json and settings.json files exist.
+    create_default_path_dir(path)
+        Creates the default pipes.json file.
+    read_pipes_json()
+        Reads the pipes.json file and loads the pipelines.
+    update_pipes_json()
+        Updates the pipes.json file with the current pipelines.
+    create_settings_json(path)
+        Creates the default settings.json file.
+    read_settings_json()
+        Reads the settings.json file and loads the settings.
+    split_pipename_and_pipestring(input_string)
+        Splits the pipeline name and the pipeline string.
+    create_pipeline_dict(pipe_name, pipe_string)
+        Creates a dictionary of a pipeline.
+    get_elements_and_subpipelines(pipe_string)
+        Tries to find all elements and subpipelines in the pipe_string
+    get_variables(tuxpipe)
+        Finds all variables in the tuxpipe string.
+    add_pipeline(input_string)
+        Adds a new pipeline to the pipes.json file.
+    remove_subpipelines(pipe_name, subpipeline)
+        Removes a subpipeline from the pipeline.
+    delete_pipeline(pipe_name)
+        Deletes a pipeline from the pipes.json file.
+    change_subpipe_name(pipe_name, subpipe_old_name, subpipe_new_name)
+        Changes the name of a subpipeline in a pipeline.
+    rename_pipeline(old_name, new_name)
+        Renames a pipeline.
+    list_pipelines(query=None)
+        List available pipelines.
+    show_pipeline_info(pipe_name)
+        Shows the info of a known pipeline.
+    create_output_file(pipe_string, output_file)
+        Creates a bash script file for executing a pipeline.
+    execute_commands(command, pre_commands=[], post_commands=[])
+        Executes the commands of a pipeline.
+    create_gstreamer_string(pipe_string)
+        Creates a gstreamer string from the pipe_string.
+    prepare_command_execution(gstreamer_string)
+        Creates pre and post commands and does some pipeline checks.
+    run_input_string(input_string)
+        Directly runs a pipeline based on the input string.
+    check_args()
+        Checks for available command line arguments.
     """
 
     def __init__(self) -> None:
@@ -556,7 +623,7 @@ class TuxPipes:
         """
         Reads the settings.json file and loads the settings.
 
-        # TODO Not in use yet, so not implemented yet.
+        # FIXME Not in use yet, so not implemented yet.
         Right now it just returns the default settings.
 
         Returns
@@ -566,7 +633,22 @@ class TuxPipes:
         """
         return DEFAULT_SETTINGS
 
-    def split_pipename_and_pipesting(self, input_string: str) -> tuple:
+    def split_pipename_and_pipestring(self, input_string: str) -> tuple:
+        """
+        Splits the pipeline name from the rest of the input string.
+
+        Parameters:
+        -----------
+        input_string: str
+            The input string to split.
+
+        Returns:
+        --------
+        pipe_name: str
+            The name of the pipeline.
+        pipe_string: str
+            The rest of the input string.
+        """
         try:
             pipe_name, pipe_string = re.split(r"(?<!:):(?!:)", input_string, maxsplit=1)
         except:
@@ -692,7 +774,7 @@ class TuxPipes:
             The input string.
         """
         overwrite = False
-        pipe_name, pipe_string = self.split_pipename_and_pipesting(input_string)
+        pipe_name, pipe_string = self.split_pipename_and_pipestring(input_string)
         # check if pipe already exists
         if pipe_name in self.pipes:
             warn(f"There is already a pipeline with the name {pipe_name}.")
@@ -989,7 +1071,21 @@ class TuxPipes:
         self, command: str, pre_commands: list = [], post_commands: list = []
     ):
         """
-        # TODO
+        This functions executes the commands to run a pipeline.
+
+        It executes the pre_commands first, if there are any.
+        Then it executes the pipeline/gstreamer command
+        and waits for it to finish or the user to interrupt it.
+        Finally it executes the post_commands, if there are any.
+
+        Parameters
+        ----------
+        command: str
+            The pipeline/gstreamer command.
+        pre_commands: list
+            A list of commands that should be executed before the pipeline.
+        post_commands: list
+            A list of commands that should be executed after the pipeline.
         """
         for pre_com in pre_commands:
             attempt(f"Executing pre command:\n\t {pre_com}")
@@ -1142,8 +1238,16 @@ class TuxPipes:
 
         return gstreamer_string, pre_commands, post_commands
 
-    def run_input_string(self, pipe_string: str):
-        gstreamer_string = self.create_gstreamer_string(pipe_string)
+    def run_input_string(self, input_string: str):
+        """
+        Directly runs a pipeline given as input.
+
+        Parameters
+        ----------
+        input_string: str
+            The input string.
+        """
+        gstreamer_string = self.create_gstreamer_string(input_string)
         gstreamer_string, pre_commands, post_commands = self.prepare_command_execution(
             gstreamer_string
         )  

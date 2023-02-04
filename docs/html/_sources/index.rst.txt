@@ -18,7 +18,7 @@ Welcome to Tuxpipes documentation!
 .. argparse::
    :module: tuxpipes
    :func: create_parser
-   :prog: tuxpipes2
+   :prog: tuxpipes
 
 Indices and tables
 ==================

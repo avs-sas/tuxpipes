@@ -43,6 +43,9 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="readme.html">README</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">tuxpipes.py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#tuxpipes">tuxpipes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#options">Options:</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tuxpipes.TuxPipes"><code class="docutils literal notranslate"><span class="pre">TuxPipes</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#tuxpipes.TuxPipes.add_pipeline"><code class="docutils literal notranslate"><span class="pre">TuxPipes.add_pipeline()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tuxpipes.TuxPipes.change_subpipe_name"><code class="docutils literal notranslate"><span class="pre">TuxPipes.change_subpipe_name()</span></code></a></li>
@@ -65,7 +68,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#tuxpipes.TuxPipes.rename_pipeline"><code class="docutils literal notranslate"><span class="pre">TuxPipes.rename_pipeline()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tuxpipes.TuxPipes.run_input_string"><code class="docutils literal notranslate"><span class="pre">TuxPipes.run_input_string()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tuxpipes.TuxPipes.show_pipe_info"><code class="docutils literal notranslate"><span class="pre">TuxPipes.show_pipe_info()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#tuxpipes.TuxPipes.split_pipename_and_pipesting"><code class="docutils literal notranslate"><span class="pre">TuxPipes.split_pipename_and_pipesting()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tuxpipes.TuxPipes.split_pipename_and_pipestring"><code class="docutils literal notranslate"><span class="pre">TuxPipes.split_pipename_and_pipestring()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tuxpipes.TuxPipes.update_pipes_json"><code class="docutils literal notranslate"><span class="pre">TuxPipes.update_pipes_json()</span></code></a></li>
 </ul>
 </li>
@@ -112,17 +115,59 @@
              
   <section id="module-tuxpipes">
 <span id="tuxpipes-py"></span><h1>tuxpipes.py<a class="headerlink" href="#module-tuxpipes" title="Permalink to this heading"></a></h1>
-<p>tuxpipes</p>
+<section id="tuxpipes">
+<h2>tuxpipes<a class="headerlink" href="#tuxpipes" title="Permalink to this heading"></a></h2>
 <p>This script is intended to simplify working with GStreamer/GStreamer 
 pipelines (gst-launch-1.0).
 The main idea is to create pipelines more easily and to be able to 
 reuse them by calling them with the given name. Also, it is possible 
 to create pipelines with variables, which can be set by the user to 
 modify existing pipelines.</p>
-<p>Usage:
-# TODO</p>
-<p>Options:
-# TODO</p>
+</section>
+<section id="usage">
+<h2>Usage:<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<p>The program expects at least one option/argument or an input_string
+(pipeline)</p>
+<blockquote>
+<div><p>“python tuxpipes.py [options] [input_string]”</p>
+<p>“tuxpipes [options] [input_string]”</p>
+</div></blockquote>
+</section>
+<section id="options">
+<h2>Options:<a class="headerlink" href="#options" title="Permalink to this heading"></a></h2>
+<dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>Show the help message and exit</p>
+</dd>
+<dt><kbd><span class="option">-a</span>, <span class="option">--add</span></kbd></dt>
+<dd><p>&lt;input_string&gt;           Add a new pipeline</p>
+</dd>
+<dt><kbd><span class="option">-d</span>, <span class="option">--delete <var>&lt;pipe_name&gt;</var></span></kbd></dt>
+<dd><p>Delete a pipeline</p>
+</dd>
+<dt><kbd><span class="option">-r</span>, <span class="option">--rename <var>&lt;old_name new_name&gt;</var></span></kbd></dt>
+<dd><p>Rename a pipeline</p>
+</dd>
+<dt><kbd><span class="option">-l</span>, <span class="option">--list <var>&lt;filter&gt;</var></span></kbd></dt>
+<dd><p>List all pipelines</p>
+</dd>
+<dt><kbd><span class="option">-i</span>, <span class="option">--info <var>&lt;pipe_name&gt;</var></span></kbd></dt>
+<dd><p>Show information about a pipeline</p>
+</dd>
+<dt><kbd><span class="option">-o</span>, <span class="option">--output <var>&lt;pipe_name&gt;</var></span></kbd></dt>
+<dd><p>Create an output file containing the pipeline command</p>
+</dd>
+<dt><kbd><span class="option">-y</span>, <span class="option">--yes</span></kbd></dt>
+<dd><p>Answer yes to all questions</p>
+</dd>
+<dt><kbd><span class="option">-n</span>, <span class="option">--no</span></kbd></dt>
+<dd><p>Answer no to all questions</p>
+</dd>
+<dt><kbd><span class="option">-c</span>, <span class="option">--commands <var>&lt;FILENAME&gt;</var></span></kbd></dt>
+<dd><p>Specify a pre commands file (executed before the pipeline)</p>
+</dd>
+</dl>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="tuxpipes.TuxPipes">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tuxpipes.</span></span><span class="sig-name descname"><span class="pre">TuxPipes</span></span><a class="reference internal" href="_modules/tuxpipes.html#TuxPipes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.TuxPipes" title="Permalink to this definition"></a></dt>
@@ -160,7 +205,54 @@ the creation of bash scripts and everything else.</p>
 </section>
 <section id="methods">
 <h2>Methods<a class="headerlink" href="#methods" title="Permalink to this heading"></a></h2>
-<p># TODO</p>
+<dl class="simple">
+<dt>check_files()</dt><dd><p>Checks if the pipes.json and settings.json files exist.</p>
+</dd>
+<dt>create_default_path_dir(path)</dt><dd><p>Creates the default pipes.json file.</p>
+</dd>
+<dt>read_pipes_json()</dt><dd><p>Reads the pipes.json file and loads the pipelines.</p>
+</dd>
+<dt>update_pipes_json()</dt><dd><p>Updates the pipes.json file with the current pipelines.</p>
+</dd>
+<dt>create_settings_json(path)</dt><dd><p>Creates the default settings.json file.</p>
+</dd>
+<dt>read_settings_json()</dt><dd><p>Reads the settings.json file and loads the settings.</p>
+</dd>
+<dt>split_pipename_and_pipestring(input_string)</dt><dd><p>Splits the pipeline name and the pipeline string.</p>
+</dd>
+<dt>create_pipeline_dict(pipe_name, pipe_string)</dt><dd><p>Creates a dictionary of a pipeline.</p>
+</dd>
+<dt>get_elements_and_subpipelines(pipe_string)</dt><dd><p>Tries to find all elements and subpipelines in the pipe_string</p>
+</dd>
+<dt>get_variables(tuxpipe)</dt><dd><p>Finds all variables in the tuxpipe string.</p>
+</dd>
+<dt>add_pipeline(input_string)</dt><dd><p>Adds a new pipeline to the pipes.json file.</p>
+</dd>
+<dt>remove_subpipelines(pipe_name, subpipeline)</dt><dd><p>Removes a subpipeline from the pipeline.</p>
+</dd>
+<dt>delete_pipeline(pipe_name)</dt><dd><p>Deletes a pipeline from the pipes.json file.</p>
+</dd>
+<dt>change_subpipe_name(pipe_name, subpipe_old_name, subpipe_new_name)</dt><dd><p>Changes the name of a subpipeline in a pipeline.</p>
+</dd>
+<dt>rename_pipeline(old_name, new_name)</dt><dd><p>Renames a pipeline.</p>
+</dd>
+<dt>list_pipelines(query=None)</dt><dd><p>List available pipelines.</p>
+</dd>
+<dt>show_pipeline_info(pipe_name)</dt><dd><p>Shows the info of a known pipeline.</p>
+</dd>
+<dt>create_output_file(pipe_string, output_file)</dt><dd><p>Creates a bash script file for executing a pipeline.</p>
+</dd>
+<dt>execute_commands(command, pre_commands=[], post_commands=[])</dt><dd><p>Executes the commands of a pipeline.</p>
+</dd>
+<dt>create_gstreamer_string(pipe_string)</dt><dd><p>Creates a gstreamer string from the pipe_string.</p>
+</dd>
+<dt>prepare_command_execution(gstreamer_string)</dt><dd><p>Creates pre and post commands and does some pipeline checks.</p>
+</dd>
+<dt>run_input_string(input_string)</dt><dd><p>Directly runs a pipeline based on the input string.</p>
+</dd>
+<dt>check_args()</dt><dd><p>Checks for available command line arguments.</p>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="tuxpipes.TuxPipes.add_pipeline">
 <span class="sig-name descname"><span class="pre">add_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#TuxPipes.add_pipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.TuxPipes.add_pipeline" title="Permalink to this definition"></a></dt>
@@ -336,7 +428,22 @@ It might be usefull to keep it, if you are going to add it again.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="tuxpipes.TuxPipes.execute_commands">
 <span class="sig-name descname"><span class="pre">execute_commands</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">command</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_commands</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_commands</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#TuxPipes.execute_commands"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.TuxPipes.execute_commands" title="Permalink to this definition"></a></dt>
-<dd><p># TODO</p>
+<dd><p>This functions executes the commands to run a pipeline.</p>
+<p>It executes the pre_commands first, if there are any.
+Then it executes the pipeline/gstreamer command
+and waits for it to finish or the user to interrupt it.
+Finally it executes the post_commands, if there are any.</p>
+<section id="id9">
+<h3>Parameters<a class="headerlink" href="#id9" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>command: str</dt><dd><p>The pipeline/gstreamer command.</p>
+</dd>
+<dt>pre_commands: list</dt><dd><p>A list of commands that should be executed before the pipeline.</p>
+</dd>
+<dt>post_commands: list</dt><dd><p>A list of commands that should be executed after the pipeline.</p>
+</dd>
+</dl>
+</section>
 </dd></dl>
 
 <dl class="py method">
@@ -352,15 +459,15 @@ If an element is a known pipeline it will be added to the
 subpipelines list. (but only once)
 Also all elements of that subpipeline will be added to the
 elements list of the current pipeline.</p>
-<section id="id9">
-<h3>Parameters<a class="headerlink" href="#id9" title="Permalink to this heading"></a></h3>
+<section id="id10">
+<h3>Parameters<a class="headerlink" href="#id10" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>pipe_string: str</dt><dd><p>The pipeline string.</p>
 </dd>
 </dl>
 </section>
-<section id="id10">
-<h3>Returns<a class="headerlink" href="#id10" title="Permalink to this heading"></a></h3>
+<section id="id11">
+<h3>Returns<a class="headerlink" href="#id11" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>elements: list</dt><dd><p>A list of all elements.</p>
 </dd>
@@ -375,15 +482,15 @@ elements list of the current pipeline.</p>
 <span class="sig-name descname"><span class="pre">get_variables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tuxpipe</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/tuxpipes.html#TuxPipes.get_variables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.TuxPipes.get_variables" title="Permalink to this definition"></a></dt>
 <dd><p>Finds all variables in the tuxpipe string.</p>
 <p>It uses a regex to find all variables and their default values.</p>
-<section id="id11">
-<h3>Parameters<a class="headerlink" href="#id11" title="Permalink to this heading"></a></h3>
+<section id="id12">
+<h3>Parameters<a class="headerlink" href="#id12" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>tuxpipe: str</dt><dd><p>The tuxpipe string.</p>
 </dd>
 </dl>
 </section>
-<section id="id12">
-<h3>Returns<a class="headerlink" href="#id12" title="Permalink to this heading"></a></h3>
+<section id="id13">
+<h3>Returns<a class="headerlink" href="#id13" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>variables: dict</dt><dd><p>A dictionary of all variables and their default values.</p>
 </dd>
@@ -400,8 +507,8 @@ The output can be filtered with an optional filter.
 This will only show pipelines that contain the filter
 in their names or input strings.
 Filter: “___” means None (for now)</p>
-<section id="id13">
-<h3>Parameters<a class="headerlink" href="#id13" title="Permalink to this heading"></a></h3>
+<section id="id14">
+<h3>Parameters<a class="headerlink" href="#id14" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>query: str</dt><dd><p>The filter for the output.</p>
 </dd>
@@ -416,15 +523,15 @@ Filter: “___” means None (for now)</p>
 <p>It takes a gstreamer string and creates a list of commands
 that have to be executed before and after the gstreamer command.
 It also tries to do some basic checks on the commands.</p>
-<section id="id14">
-<h3>Parameters<a class="headerlink" href="#id14" title="Permalink to this heading"></a></h3>
+<section id="id15">
+<h3>Parameters<a class="headerlink" href="#id15" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>gstreamer_string: str</dt><dd><p>The gstreamer string.</p>
 </dd>
 </dl>
 </section>
-<section id="id15">
-<h3>Returns<a class="headerlink" href="#id15" title="Permalink to this heading"></a></h3>
+<section id="id16">
+<h3>Returns<a class="headerlink" href="#id16" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>pre_commands: list</dt><dd><p>The list of pre commands.</p>
 </dd>
@@ -438,8 +545,8 @@ It also tries to do some basic checks on the commands.</p>
 <dt class="sig sig-object py" id="tuxpipes.TuxPipes.read_pipes_json">
 <span class="sig-name descname"><span class="pre">read_pipes_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/tuxpipes.html#TuxPipes.read_pipes_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.TuxPipes.read_pipes_json" title="Permalink to this definition"></a></dt>
 <dd><p>Reads the pipes.json file and loads the pipelines.</p>
-<section id="id16">
-<h3>Returns<a class="headerlink" href="#id16" title="Permalink to this heading"></a></h3>
+<section id="id17">
+<h3>Returns<a class="headerlink" href="#id17" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>pipes: dict</dt><dd><p>A dictionary of all pipelines.</p>
 </dd>
@@ -451,10 +558,10 @@ It also tries to do some basic checks on the commands.</p>
 <dt class="sig sig-object py" id="tuxpipes.TuxPipes.read_settings_json">
 <span class="sig-name descname"><span class="pre">read_settings_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/tuxpipes.html#TuxPipes.read_settings_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.TuxPipes.read_settings_json" title="Permalink to this definition"></a></dt>
 <dd><p>Reads the settings.json file and loads the settings.</p>
-<p># TODO Not in use yet, so not implemented yet.
+<p># FIXME Not in use yet, so not implemented yet.
 Right now it just returns the default settings.</p>
-<section id="id17">
-<h3>Returns<a class="headerlink" href="#id17" title="Permalink to this heading"></a></h3>
+<section id="id18">
+<h3>Returns<a class="headerlink" href="#id18" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>settings: dict</dt><dd><p>A dictionary of all settings.</p>
 </dd>
@@ -470,8 +577,8 @@ Right now it just returns the default settings.</p>
 Then it creates a new list of parts without the subpipeline.
 Then it creates a new pipeline dictionary with the new parts.
 Then it updates the pipes.json file.</p>
-<section id="id18">
-<h3>Parameters<a class="headerlink" href="#id18" title="Permalink to this heading"></a></h3>
+<section id="id19">
+<h3>Parameters<a class="headerlink" href="#id19" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>pipe_name: str</dt><dd><p>The name of the pipeline.</p>
 </dd>
@@ -490,8 +597,8 @@ Then it updates the pipes.json file.
 It will also check if the pipeline is used as a subpipeline in
 another pipeline and change the name there as well.
 (if the user wants to)</p>
-<section id="id19">
-<h3>Parameters<a class="headerlink" href="#id19" title="Permalink to this heading"></a></h3>
+<section id="id20">
+<h3>Parameters<a class="headerlink" href="#id20" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>old_name: str</dt><dd><p>The old name of the pipeline.</p>
 </dd>
@@ -503,8 +610,16 @@ another pipeline and change the name there as well.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tuxpipes.TuxPipes.run_input_string">
-<span class="sig-name descname"><span class="pre">run_input_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipe_string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#TuxPipes.run_input_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.TuxPipes.run_input_string" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">run_input_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#TuxPipes.run_input_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.TuxPipes.run_input_string" title="Permalink to this definition"></a></dt>
+<dd><p>Directly runs a pipeline given as input.</p>
+<section id="id21">
+<h3>Parameters<a class="headerlink" href="#id21" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>input_string: str</dt><dd><p>The input string.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tuxpipes.TuxPipes.show_pipe_info">
@@ -512,8 +627,8 @@ another pipeline and change the name there as well.
 <dd><p>Shows information about a pipeline.</p>
 <p>It prints the name of the pipeline, the input string and
 all subpipelines.</p>
-<section id="id20">
-<h3>Parameters<a class="headerlink" href="#id20" title="Permalink to this heading"></a></h3>
+<section id="id22">
+<h3>Parameters<a class="headerlink" href="#id22" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>pipe_name: str</dt><dd><p>The name of the pipeline.</p>
 </dd>
@@ -522,9 +637,26 @@ all subpipelines.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="tuxpipes.TuxPipes.split_pipename_and_pipesting">
-<span class="sig-name descname"><span class="pre">split_pipename_and_pipesting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="reference internal" href="_modules/tuxpipes.html#TuxPipes.split_pipename_and_pipesting"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.TuxPipes.split_pipename_and_pipesting" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="tuxpipes.TuxPipes.split_pipename_and_pipestring">
+<span class="sig-name descname"><span class="pre">split_pipename_and_pipestring</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="reference internal" href="_modules/tuxpipes.html#TuxPipes.split_pipename_and_pipestring"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.TuxPipes.split_pipename_and_pipestring" title="Permalink to this definition"></a></dt>
+<dd><p>Splits the pipeline name from the rest of the input string.</p>
+<section id="id23">
+<h3>Parameters:<a class="headerlink" href="#id23" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>input_string: str</dt><dd><p>The input string to split.</p>
+</dd>
+</dl>
+</section>
+<section id="id24">
+<h3>Returns:<a class="headerlink" href="#id24" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>pipe_name: str</dt><dd><p>The name of the pipeline.</p>
+</dd>
+<dt>pipe_string: str</dt><dd><p>The rest of the input string.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tuxpipes.TuxPipes.update_pipes_json">
@@ -539,8 +671,8 @@ all subpipelines.</p>
 <dt class="sig sig-object py" id="tuxpipes.ask_yes_no">
 <span class="sig-prename descclassname"><span class="pre">tuxpipes.</span></span><span class="sig-name descname"><span class="pre">ask_yes_no</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">question</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#ask_yes_no"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.ask_yes_no" title="Permalink to this definition"></a></dt>
 <dd><p>Asks the user a yes/no question.</p>
-<section id="id21">
-<h2>Returns<a class="headerlink" href="#id21" title="Permalink to this heading"></a></h2>
+<section id="id25">
+<h2>Returns<a class="headerlink" href="#id25" title="Permalink to this heading"></a></h2>
 <dl class="simple">
 <dt>answer: bool</dt><dd><p>True if the user answered yes, False if the user answered no.</p>
 </dd>
@@ -550,11 +682,11 @@ all subpipelines.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tuxpipes.attempt">
-<span class="sig-prename descclassname"><span class="pre">tuxpipes.</span></span><span class="sig-name descname"><span class="pre">attempt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">&gt;</span> <span class="pre">TuxPipes:</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#attempt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.attempt" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">tuxpipes.</span></span><span class="sig-name descname"><span class="pre">attempt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">&gt;</span> <span class="pre">tuxpipes:</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#attempt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.attempt" title="Permalink to this definition"></a></dt>
 <dd><p>Prints an attempt message.</p>
 <p>Quick wrapper for colored(). (color: “cyan”)</p>
-<section id="id22">
-<h2>Parameters<a class="headerlink" href="#id22" title="Permalink to this heading"></a></h2>
+<section id="id26">
+<h2>Parameters<a class="headerlink" href="#id26" title="Permalink to this heading"></a></h2>
 <dl class="simple">
 <dt>message: str</dt><dd><p>The message to print.</p>
 </dd>
@@ -566,10 +698,10 @@ all subpipelines.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tuxpipes.colored">
-<span class="sig-prename descclassname"><span class="pre">tuxpipes.</span></span><span class="sig-name descname"><span class="pre">colored</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">&gt;</span> <span class="pre">TuxPipes:</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#colored"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.colored" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">tuxpipes.</span></span><span class="sig-name descname"><span class="pre">colored</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">&gt;</span> <span class="pre">tuxpipes:</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#colored"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.colored" title="Permalink to this definition"></a></dt>
 <dd><p>Prints a colored message.</p>
-<section id="id23">
-<h2>Parameters<a class="headerlink" href="#id23" title="Permalink to this heading"></a></h2>
+<section id="id27">
+<h2>Parameters<a class="headerlink" href="#id27" title="Permalink to this heading"></a></h2>
 <dl class="simple">
 <dt>text: str</dt><dd><p>The text to print.</p>
 </dd>
@@ -586,8 +718,8 @@ all subpipelines.</p>
 <span class="sig-prename descclassname"><span class="pre">tuxpipes.</span></span><span class="sig-name descname"><span class="pre">create_default_path_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#create_default_path_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.create_default_path_dir" title="Permalink to this definition"></a></dt>
 <dd><p>Creates a directory at the given path.</p>
 <p>If the directory already exists, it does nothing.</p>
-<section id="id24">
-<h2>Parameters<a class="headerlink" href="#id24" title="Permalink to this heading"></a></h2>
+<section id="id28">
+<h2>Parameters<a class="headerlink" href="#id28" title="Permalink to this heading"></a></h2>
 <dl class="simple">
 <dt>path: str</dt><dd><p>The path to create the directory at.</p>
 </dd>
@@ -599,8 +731,8 @@ all subpipelines.</p>
 <dt class="sig sig-object py" id="tuxpipes.create_parser">
 <span class="sig-prename descclassname"><span class="pre">tuxpipes.</span></span><span class="sig-name descname"><span class="pre">create_parser</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#create_parser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.create_parser" title="Permalink to this definition"></a></dt>
 <dd><p>Parses the command line arguments.</p>
-<section id="id25">
-<h2>Returns<a class="headerlink" href="#id25" title="Permalink to this heading"></a></h2>
+<section id="id29">
+<h2>Returns<a class="headerlink" href="#id29" title="Permalink to this heading"></a></h2>
 <dl class="simple">
 <dt>parser: ArgumentParser</dt><dd><p>The ArgumentParser object.</p>
 </dd>
@@ -610,11 +742,11 @@ all subpipelines.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tuxpipes.error">
-<span class="sig-prename descclassname"><span class="pre">tuxpipes.</span></span><span class="sig-name descname"><span class="pre">error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">&gt;</span> <span class="pre">TuxPipes:</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.error" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">tuxpipes.</span></span><span class="sig-name descname"><span class="pre">error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">&gt;</span> <span class="pre">tuxpipes:</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.error" title="Permalink to this definition"></a></dt>
 <dd><p>Prints an error message.</p>
 <p>Quick wrapper for colored(). (color: “red”)</p>
-<section id="id26">
-<h2>Parameters<a class="headerlink" href="#id26" title="Permalink to this heading"></a></h2>
+<section id="id30">
+<h2>Parameters<a class="headerlink" href="#id30" title="Permalink to this heading"></a></h2>
 <dl class="simple">
 <dt>message: str</dt><dd><p>The message to print.</p>
 </dd>
@@ -629,8 +761,8 @@ all subpipelines.</p>
 <span class="sig-prename descclassname"><span class="pre">tuxpipes.</span></span><span class="sig-name descname"><span class="pre">header_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'green'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#header_message"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.header_message" title="Permalink to this definition"></a></dt>
 <dd><p>Prints a header message.</p>
 <p>Clears the terminal and prints a header message.</p>
-<section id="id27">
-<h2>Parameters<a class="headerlink" href="#id27" title="Permalink to this heading"></a></h2>
+<section id="id31">
+<h2>Parameters<a class="headerlink" href="#id31" title="Permalink to this heading"></a></h2>
 <dl class="simple">
 <dt>message: str</dt><dd><p>The message to print.</p>
 </dd>
@@ -642,11 +774,11 @@ all subpipelines.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tuxpipes.info">
-<span class="sig-prename descclassname"><span class="pre">tuxpipes.</span></span><span class="sig-name descname"><span class="pre">info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">&gt;</span> <span class="pre">TuxPipes:</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.info" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">tuxpipes.</span></span><span class="sig-name descname"><span class="pre">info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">&gt;</span> <span class="pre">tuxpipes:</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.info" title="Permalink to this definition"></a></dt>
 <dd><p>Prints an info message.</p>
 <p>Quick wrapper for colored(). (color: “white”)</p>
-<section id="id28">
-<h2>Parameters<a class="headerlink" href="#id28" title="Permalink to this heading"></a></h2>
+<section id="id32">
+<h2>Parameters<a class="headerlink" href="#id32" title="Permalink to this heading"></a></h2>
 <dl class="simple">
 <dt>message: str</dt><dd><p>The message to print.</p>
 </dd>
@@ -664,11 +796,11 @@ all subpipelines.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tuxpipes.success">
-<span class="sig-prename descclassname"><span class="pre">tuxpipes.</span></span><span class="sig-name descname"><span class="pre">success</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">&gt;</span> <span class="pre">TuxPipes:</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#success"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.success" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">tuxpipes.</span></span><span class="sig-name descname"><span class="pre">success</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">&gt;</span> <span class="pre">tuxpipes:</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#success"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.success" title="Permalink to this definition"></a></dt>
 <dd><p>Prints a success message.</p>
 <p>Quick wrapper for colored(). (color: “green”)</p>
-<section id="id29">
-<h2>Parameters<a class="headerlink" href="#id29" title="Permalink to this heading"></a></h2>
+<section id="id33">
+<h2>Parameters<a class="headerlink" href="#id33" title="Permalink to this heading"></a></h2>
 <dl class="simple">
 <dt>message: str</dt><dd><p>The message to print.</p>
 </dd>
@@ -680,11 +812,11 @@ all subpipelines.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tuxpipes.warn">
-<span class="sig-prename descclassname"><span class="pre">tuxpipes.</span></span><span class="sig-name descname"><span class="pre">warn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">&gt;</span> <span class="pre">TuxPipes:</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#warn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.warn" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">tuxpipes.</span></span><span class="sig-name descname"><span class="pre">warn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">&gt;</span> <span class="pre">tuxpipes:</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tuxpipes.html#warn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuxpipes.warn" title="Permalink to this definition"></a></dt>
 <dd><p>Prints a warning message.</p>
 <p>Quick wrapper for colored(). (color: “yellow”)</p>
-<section id="id30">
-<h2>Parameters<a class="headerlink" href="#id30" title="Permalink to this heading"></a></h2>
+<section id="id34">
+<h2>Parameters<a class="headerlink" href="#id34" title="Permalink to this heading"></a></h2>
 <dl class="simple">
 <dt>message: str</dt><dd><p>The message to print.</p>
 </dd>

@@ -70,7 +70,9 @@
              
   <h1>Source code for tuxpipes</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
-<span class="sd">&quot;&quot;&quot;tuxpipes</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">tuxpipes</span>
+<span class="sd">========</span>
 
 <span class="sd">This script is intended to simplify working with GStreamer/GStreamer </span>
 <span class="sd">pipelines (gst-launch-1.0).</span>
@@ -80,10 +82,35 @@
 <span class="sd">modify existing pipelines.</span>
 
 <span class="sd">Usage:</span>
-<span class="sd"># TODO</span>
+<span class="sd">======</span>
+<span class="sd">The program expects at least one option/argument or an input_string</span>
+<span class="sd">(pipeline)</span>
 
+<span class="sd">        &quot;python tuxpipes.py [options] [input_string]&quot;</span>
+
+<span class="sd">        &quot;tuxpipes [options] [input_string]&quot;</span>
+<span class="sd">    </span>
 <span class="sd">Options:</span>
-<span class="sd"># TODO</span>
+<span class="sd">========</span>
+<span class="sd">-h, --help                          Show the help message and exit</span>
+
+<span class="sd">-a, --add  &lt;input_string&gt;           Add a new pipeline</span>
+
+<span class="sd">-d, --delete &lt;pipe_name&gt;            Delete a pipeline</span>
+
+<span class="sd">-r, --rename &lt;old_name new_name&gt;    Rename a pipeline</span>
+
+<span class="sd">-l, --list &lt;filter&gt;                 List all pipelines</span>
+
+<span class="sd">-i, --info &lt;pipe_name&gt;              Show information about a pipeline</span>
+
+<span class="sd">-o, --output &lt;pipe_name&gt;            Create an output file containing the pipeline command</span>
+
+<span class="sd">-y, --yes                           Answer yes to all questions</span>
+
+<span class="sd">-n, --no                            Answer no to all questions</span>
+
+<span class="sd">-c, --commands &lt;FILENAME&gt;           Specify a pre commands file (executed before the pipeline)</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 
@@ -94,19 +121,15 @@
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">json</span>
 
-<span class="c1"># ==================== #</span>
-<span class="c1">#       Globals        #</span>
-<span class="c1"># ==================== #</span>
-<span class="n">APPNAME</span> <span class="o">=</span> <span class="s2">&quot;TuxPipes&quot;</span>
-
-<span class="c1"># for the pipe dict</span>
+<span class="c1"># Global variables</span>
+<span class="c1"># ================</span>
+<span class="n">APPNAME</span> <span class="o">=</span> <span class="s2">&quot;tuxpipes&quot;</span>
 <span class="n">VARIABLES</span> <span class="o">=</span> <span class="s2">&quot;variables&quot;</span>
 <span class="n">ELEMENTS</span> <span class="o">=</span> <span class="s2">&quot;elements&quot;</span>
 <span class="n">SUBPIPELINES</span> <span class="o">=</span> <span class="s2">&quot;subpipelines&quot;</span>
 <span class="n">INPUT</span> <span class="o">=</span> <span class="s2">&quot;input&quot;</span>
 <span class="n">TUXPIPE</span> <span class="o">=</span> <span class="s2">&quot;tuxpipe&quot;</span>
 
-<span class="c1"># default pipes</span>
 <span class="n">DEFAULT_PIPES</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;dev&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;dev:v4l2src device=/dev/video#DEVNUM=3&quot;</span><span class="p">,</span>
@@ -215,9 +238,8 @@
 <span class="n">DEFAULT_SETTINGS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;isDefault&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;handleDupePipe&quot;</span><span class="p">:</span> <span class="s2">&quot;ask&quot;</span><span class="p">,</span> <span class="s2">&quot;blank&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
 <span class="c1"># &quot;gst-launch-1.0 -v imxcompositor_g2d name=c sink_0::xpos=0 sink_0::ypos=0 sink_0::width=960 sink_0::height=1080 sink_0::keep-ratio=true sink_1::xpos=960 sink_1::ypos=0 sink_1::width=960 sink_1::height=1080 sink_1::keep-ratio=true ! waylandsink  v4l2src device=/dev/video3 ! video/x-raw,width=1920,height=1080,framerate=20/1 ! videoconvert ! c.sink_0 videotestsrc ! video/x-raw,width=1920,height=1080,framerate=20/1 ! videoconvert ! c.sink_1&quot;</span>
 
-<span class="c1"># ==================== #</span>
-<span class="c1">#   Helper functions   #</span>
-<span class="c1"># ==================== #</span>
+<span class="c1"># Helpers</span>
+<span class="c1"># =======</span>
 <div class="viewcode-block" id="colored"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.colored">[docs]</a><span class="k">def</span> <span class="nf">colored</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot; &gt; </span><span class="si">{</span><span class="n">APPNAME</span><span class="si">}</span><span class="s2">: &quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Prints a colored message.</span>
@@ -469,10 +491,10 @@
 
     <span class="k">return</span> <span class="n">parser</span></div>
 
-
-<span class="c1"># ==================== #</span>
-<span class="c1">#       Classes        #</span>
-<span class="c1"># ==================== #</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Classes</span>
+<span class="sd">=======</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <div class="viewcode-block" id="TuxPipes"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes">[docs]</a><span class="k">class</span> <span class="nc">TuxPipes</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The main class of TuxPipes.</span>
@@ -508,7 +530,52 @@
 
 <span class="sd">    Methods</span>
 <span class="sd">    -------</span>
-<span class="sd">    # TODO</span>
+<span class="sd">    check_files()</span>
+<span class="sd">        Checks if the pipes.json and settings.json files exist.</span>
+<span class="sd">    create_default_path_dir(path)</span>
+<span class="sd">        Creates the default pipes.json file.</span>
+<span class="sd">    read_pipes_json()</span>
+<span class="sd">        Reads the pipes.json file and loads the pipelines.</span>
+<span class="sd">    update_pipes_json()</span>
+<span class="sd">        Updates the pipes.json file with the current pipelines.</span>
+<span class="sd">    create_settings_json(path)</span>
+<span class="sd">        Creates the default settings.json file.</span>
+<span class="sd">    read_settings_json()</span>
+<span class="sd">        Reads the settings.json file and loads the settings.</span>
+<span class="sd">    split_pipename_and_pipestring(input_string)</span>
+<span class="sd">        Splits the pipeline name and the pipeline string.</span>
+<span class="sd">    create_pipeline_dict(pipe_name, pipe_string)</span>
+<span class="sd">        Creates a dictionary of a pipeline.</span>
+<span class="sd">    get_elements_and_subpipelines(pipe_string)</span>
+<span class="sd">        Tries to find all elements and subpipelines in the pipe_string</span>
+<span class="sd">    get_variables(tuxpipe)</span>
+<span class="sd">        Finds all variables in the tuxpipe string.</span>
+<span class="sd">    add_pipeline(input_string)</span>
+<span class="sd">        Adds a new pipeline to the pipes.json file.</span>
+<span class="sd">    remove_subpipelines(pipe_name, subpipeline)</span>
+<span class="sd">        Removes a subpipeline from the pipeline.</span>
+<span class="sd">    delete_pipeline(pipe_name)</span>
+<span class="sd">        Deletes a pipeline from the pipes.json file.</span>
+<span class="sd">    change_subpipe_name(pipe_name, subpipe_old_name, subpipe_new_name)</span>
+<span class="sd">        Changes the name of a subpipeline in a pipeline.</span>
+<span class="sd">    rename_pipeline(old_name, new_name)</span>
+<span class="sd">        Renames a pipeline.</span>
+<span class="sd">    list_pipelines(query=None)</span>
+<span class="sd">        List available pipelines.</span>
+<span class="sd">    show_pipeline_info(pipe_name)</span>
+<span class="sd">        Shows the info of a known pipeline.</span>
+<span class="sd">    create_output_file(pipe_string, output_file)</span>
+<span class="sd">        Creates a bash script file for executing a pipeline.</span>
+<span class="sd">    execute_commands(command, pre_commands=[], post_commands=[])</span>
+<span class="sd">        Executes the commands of a pipeline.</span>
+<span class="sd">    create_gstreamer_string(pipe_string)</span>
+<span class="sd">        Creates a gstreamer string from the pipe_string.</span>
+<span class="sd">    prepare_command_execution(gstreamer_string)</span>
+<span class="sd">        Creates pre and post commands and does some pipeline checks.</span>
+<span class="sd">    run_input_string(input_string)</span>
+<span class="sd">        Directly runs a pipeline based on the input string.</span>
+<span class="sd">    check_args()</span>
+<span class="sd">        Checks for available command line arguments.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -627,7 +694,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reads the settings.json file and loads the settings.</span>
 
-<span class="sd">        # TODO Not in use yet, so not implemented yet.</span>
+<span class="sd">        # FIXME Not in use yet, so not implemented yet.</span>
 <span class="sd">        Right now it just returns the default settings.</span>
 
 <span class="sd">        Returns</span>
@@ -637,7 +704,22 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">DEFAULT_SETTINGS</span></div>
 
-<div class="viewcode-block" id="TuxPipes.split_pipename_and_pipesting"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.split_pipename_and_pipesting">[docs]</a>    <span class="k">def</span> <span class="nf">split_pipename_and_pipesting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<div class="viewcode-block" id="TuxPipes.split_pipename_and_pipestring"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.split_pipename_and_pipestring">[docs]</a>    <span class="k">def</span> <span class="nf">split_pipename_and_pipestring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Splits the pipeline name from the rest of the input string.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        input_string: str</span>
+<span class="sd">            The input string to split.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        pipe_name: str</span>
+<span class="sd">            The name of the pipeline.</span>
+<span class="sd">        pipe_string: str</span>
+<span class="sd">            The rest of the input string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">pipe_name</span><span class="p">,</span> <span class="n">pipe_string</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?&lt;!:):(?!:)&quot;</span><span class="p">,</span> <span class="n">input_string</span><span class="p">,</span> <span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">except</span><span class="p">:</span>
@@ -763,7 +845,7 @@
 <span class="sd">            The input string.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">overwrite</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">pipe_name</span><span class="p">,</span> <span class="n">pipe_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">split_pipename_and_pipesting</span><span class="p">(</span><span class="n">input_string</span><span class="p">)</span>
+        <span class="n">pipe_name</span><span class="p">,</span> <span class="n">pipe_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">split_pipename_and_pipestring</span><span class="p">(</span><span class="n">input_string</span><span class="p">)</span>
         <span class="c1"># check if pipe already exists</span>
         <span class="k">if</span> <span class="n">pipe_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">:</span>
             <span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There is already a pipeline with the name </span><span class="si">{</span><span class="n">pipe_name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
@@ -1060,7 +1142,21 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pre_commands</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">post_commands</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        # TODO</span>
+<span class="sd">        This functions executes the commands to run a pipeline.</span>
+
+<span class="sd">        It executes the pre_commands first, if there are any.</span>
+<span class="sd">        Then it executes the pipeline/gstreamer command</span>
+<span class="sd">        and waits for it to finish or the user to interrupt it.</span>
+<span class="sd">        Finally it executes the post_commands, if there are any.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        command: str</span>
+<span class="sd">            The pipeline/gstreamer command.</span>
+<span class="sd">        pre_commands: list</span>
+<span class="sd">            A list of commands that should be executed before the pipeline.</span>
+<span class="sd">        post_commands: list</span>
+<span class="sd">            A list of commands that should be executed after the pipeline.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">pre_com</span> <span class="ow">in</span> <span class="n">pre_commands</span><span class="p">:</span>
             <span class="n">attempt</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Executing pre command:</span><span class="se">\n\t</span><span class="s2"> </span><span class="si">{</span><span class="n">pre_com</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -1213,8 +1309,16 @@
 
         <span class="k">return</span> <span class="n">gstreamer_string</span><span class="p">,</span> <span class="n">pre_commands</span><span class="p">,</span> <span class="n">post_commands</span></div>
 
-<div class="viewcode-block" id="TuxPipes.run_input_string"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.run_input_string">[docs]</a>    <span class="k">def</span> <span class="nf">run_input_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">gstreamer_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_gstreamer_string</span><span class="p">(</span><span class="n">pipe_string</span><span class="p">)</span>
+<div class="viewcode-block" id="TuxPipes.run_input_string"><a class="viewcode-back" href="../tuxpipes.html#tuxpipes.TuxPipes.run_input_string">[docs]</a>    <span class="k">def</span> <span class="nf">run_input_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Directly runs a pipeline given as input.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_string: str</span>
+<span class="sd">            The input string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gstreamer_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_gstreamer_string</span><span class="p">(</span><span class="n">input_string</span><span class="p">)</span>
         <span class="n">gstreamer_string</span><span class="p">,</span> <span class="n">pre_commands</span><span class="p">,</span> <span class="n">post_commands</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_command_execution</span><span class="p">(</span>
             <span class="n">gstreamer_string</span>
         <span class="p">)</span>  
