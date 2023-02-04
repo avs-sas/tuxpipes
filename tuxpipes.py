@@ -516,7 +516,7 @@ class TuxPipes:
         self.cwd = os.getcwd()
         self.pipes_json_path = None
         self.settings_json_path = None
-        self.default_path = "/etc/defaults/tuxpipes"
+        self.default_path = "/etc/tuxpipes/"
         create_default_path_dir(self.default_path)
         self.check_files()
         self.pipes = {}
