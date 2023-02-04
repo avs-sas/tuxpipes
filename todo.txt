@@ -1,0 +1,13 @@
+A list of changes and features planed for the project in no particular order.
+- Add Pipeline class to get rid of dictionaries
+- Add an option to define the "pipes.json"
+    This way you can test differetn collections without risking your working pipes.
+- Separate files for classes etc.
+    The reason for a single script/module was to make it less error prone by removing
+    the risk of missing files etc.
+- bash script tutorial to walk you through the different commands with examples
+    Better understanding than reading some dictionaries
+- Remove unnecessary prints/outputs
+- Change the way the program looks for pipes.json and settings.json
+- Better variable handling 
+- Pipeline checking and correction
