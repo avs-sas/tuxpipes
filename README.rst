@@ -16,7 +16,9 @@ If you just want to test and use the script, clone the repo and execute
 it.
     
         $ git clone ...
+
         $ cd tuxpipes
+        
         $ python tuxpipes.py -h
 
 
