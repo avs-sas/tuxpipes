@@ -38,7 +38,6 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tuxpipes.html">tuxpipes.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pipes.html">pipes.json</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../settings.html">settings.json</a></li>
@@ -90,9 +89,8 @@
 
 <span class="sd">        &quot;tuxpipes [options] [input_string]&quot;</span>
 
-<span class="sd">Syntax</span>
-<span class="sd">======</span>
-
+<span class="sd">Syntax:</span>
+<span class="sd">=======</span>
 <span class="sd">The syntax for a tuxpipe pipeline is as follows:</span>
 
 <span class="sd">        &lt;name&gt;:&lt;element1&gt;:&lt;element2&gt;:...:&lt;elementN&gt;</span>
@@ -107,15 +105,12 @@
 <span class="sd">        #&lt;name&gt;=&lt;default value&gt;</span>
 
 <span class="sd">To set the value for the variable when calling the pipeline add a bracket</span>
-<span class="sd">element after the actual pipeline, separated by an :</span>
+<span class="sd">element after the actual pipeline.</span>
 
-<span class="sd">        &lt;pipeline_name&gt;:(720,480,#FRAMERATE=30,#DEVICENUM=3)</span>
+<span class="sd">        &lt;pipeline_name&gt;(720,480,#FRAMERATE=30,#DEVICENUM=3)</span>
 
-<span class="sd">The values are separated by a comma. You can either specifiy the variable</span>
-<span class="sd">by the name plus the value separated by an =, or you just go from left to</span>
-<span class="sd">right and set the values for the variables in the order they are defined.</span>
-
-<span class="sd">It is possible to combine both ways.</span>
+<span class="sd">The values are separated by a comma. The script first tries to set all </span>
+<span class="sd">specific variables and then goes from left to right.</span>
 <span class="sd">    </span>
 <span class="sd">Options:</span>
 <span class="sd">========</span>

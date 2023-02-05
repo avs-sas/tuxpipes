@@ -140,5 +140,21 @@
         "subpipelines": [
             "gst"
         ]
+    },
+    "test": {
+        "input": "test:gst-launch-1.0 videotestsrc:video/x-raw,width=#W=1920,height=#H=1080,framerate=#F=10/1:videoconvert:autovideosink",
+        "elements": [
+            "gst-launch-1.0 videotestsrc",
+            "video/x-raw,width=#W=1920,height=#H=1080,framerate=#F=10/1",
+            "videoconvert",
+            "autovideosink"
+        ],
+        "subpipelines": [],
+        "tuxpipe": "gst-launch-1.0 videotestsrc:video/x-raw,width=#W=1920,height=#H=1080,framerate=#F=10/1:videoconvert:autovideosink",
+        "variables": {
+            "#W": "1920",
+            "#H": "1080",
+            "#F": "10/1"
+        }
     }
 }

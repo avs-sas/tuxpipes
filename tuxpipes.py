@@ -19,9 +19,8 @@ The program expects at least one option/argument or an input_string
 
         "tuxpipes [options] [input_string]"
 
-Syntax
-======
-
+Syntax:
+=======
 The syntax for a tuxpipe pipeline is as follows:
 
         <name>:<element1>:<element2>:...:<elementN>
@@ -36,15 +35,12 @@ an "=" followed by an optional default value.
         #<name>=<default value>
 
 To set the value for the variable when calling the pipeline add a bracket
-element after the actual pipeline, separated by an :
+element after the actual pipeline.
 
-        <pipeline_name>:(720,480,#FRAMERATE=30,#DEVICENUM=3)
+        <pipeline_name>(720,480,#FRAMERATE=30,#DEVICENUM=3)
 
-The values are separated by a comma. You can either specifiy the variable
-by the name plus the value separated by an =, or you just go from left to
-right and set the values for the variables in the order they are defined.
-
-It is possible to combine both ways.
+The values are separated by a comma. The script first tries to set all 
+specific variables and then goes from left to right.
     
 Options:
 ========
