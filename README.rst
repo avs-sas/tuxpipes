@@ -77,25 +77,26 @@ It is possible to combine both ways.
 
 Options:
 ========
--h, --help                          Show the help message and exit
+-h, --help      Show the help message and exit
 
--a, --add  <input_string>           Add a new pipeline
+-a, --add  <input_string>       Add a new pipeline
 
--d, --delete <pipe_name>            Delete a pipeline
+-d, --delete <pipe_name>        Delete a pipeline
 
--r, --rename <old_name new_name>    Rename a pipeline
+-r, --rename <old_name new_name>        Rename a pipeline
 
--l, --list <filter>                 List all pipelines
+-l, --list <filter>     List all pipelines
 
--i, --info <pipe_name>              Show information about a pipeline
+-i, --info <pipe_name>  Show information about a pipeline
 
--o, --output <pipe_name>            Create an output file containing the pipeline command
+-o, --output <pipe_name>        Create an output file containing the pipeline command
 
--y, --yes                           Answer yes to all questions
+-y, --yes       Answer yes to all questions
 
--n, --no                            Answer no to all questions
+-n, --no        Answer no to all questions
 
--c, --commands <FILENAME>           Specify a pre commands file (executed before the pipeline)
+-c, --commands <FILENAME>       Specify a pre commands file (executed before the pipeline)
+
 
 For all command line options call -h / --help or check the docs.
 
