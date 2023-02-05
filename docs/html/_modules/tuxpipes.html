@@ -89,6 +89,33 @@
 <span class="sd">        &quot;python tuxpipes.py [options] [input_string]&quot;</span>
 
 <span class="sd">        &quot;tuxpipes [options] [input_string]&quot;</span>
+
+<span class="sd">Syntax</span>
+<span class="sd">======</span>
+
+<span class="sd">The syntax for a tuxpipe pipeline is as follows:</span>
+
+<span class="sd">        &lt;name&gt;:&lt;element1&gt;:&lt;element2&gt;:...:&lt;elementN&gt;</span>
+
+<span class="sd">The name is used to call the pipeline or use it in another pipeline.</span>
+<span class="sd">The elements can basically be everything -  other pipelines, gstreamer</span>
+<span class="sd">elements or just placeholder variables.</span>
+
+<span class="sd">Variables inside pipes begin with an &quot;#&quot; followed by the name followed by </span>
+<span class="sd">an &quot;=&quot; followed by an optional default value.</span>
+
+<span class="sd">        #&lt;name&gt;=&lt;default value&gt;</span>
+
+<span class="sd">To set the value for the variable when calling the pipeline add a bracket</span>
+<span class="sd">element after the actual pipeline, separated by an :</span>
+
+<span class="sd">        &lt;pipeline_name&gt;:(720,480,#FRAMERATE=30,#DEVICENUM=3)</span>
+
+<span class="sd">The values are separated by a comma. You can either specifiy the variable</span>
+<span class="sd">by the name plus the value separated by an =, or you just go from left to</span>
+<span class="sd">right and set the values for the variables in the order they are defined.</span>
+
+<span class="sd">It is possible to combine both ways.</span>
 <span class="sd">    </span>
 <span class="sd">Options:</span>
 <span class="sd">========</span>
@@ -587,7 +614,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pipes_json_path</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings_json_path</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">default_path</span> <span class="o">=</span> <span class="s2">&quot;/etc/defaults/tuxpipes&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_path</span> <span class="o">=</span> <span class="s2">&quot;/etc/tuxpipes/&quot;</span>
         <span class="n">create_default_path_dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">check_files</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span> <span class="o">=</span> <span class="p">{}</span>

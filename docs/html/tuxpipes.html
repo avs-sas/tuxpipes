@@ -45,6 +45,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">tuxpipes.py</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#tuxpipes">tuxpipes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#usage">Usage:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#syntax">Syntax</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#options">Options:</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tuxpipes.TuxPipes"><code class="docutils literal notranslate"><span class="pre">TuxPipes</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#tuxpipes.TuxPipes.add_pipeline"><code class="docutils literal notranslate"><span class="pre">TuxPipes.add_pipeline()</span></code></a></li>
@@ -132,6 +133,30 @@ modify existing pipelines.</p>
 <div><p>“python tuxpipes.py [options] [input_string]”</p>
 <p>“tuxpipes [options] [input_string]”</p>
 </div></blockquote>
+</section>
+<section id="syntax">
+<h2>Syntax<a class="headerlink" href="#syntax" title="Permalink to this heading"></a></h2>
+<p>The syntax for a tuxpipe pipeline is as follows:</p>
+<blockquote>
+<div><p>&lt;name&gt;:&lt;element1&gt;:&lt;element2&gt;:…:&lt;elementN&gt;</p>
+</div></blockquote>
+<p>The name is used to call the pipeline or use it in another pipeline.
+The elements can basically be everything -  other pipelines, gstreamer
+elements or just placeholder variables.</p>
+<p>Variables inside pipes begin with an “#” followed by the name followed by 
+an “=” followed by an optional default value.</p>
+<blockquote>
+<div><p>#&lt;name&gt;=&lt;default value&gt;</p>
+</div></blockquote>
+<p>To set the value for the variable when calling the pipeline add a bracket
+element after the actual pipeline, separated by an :</p>
+<blockquote>
+<div><p>&lt;pipeline_name&gt;:(720,480,#FRAMERATE=30,#DEVICENUM=3)</p>
+</div></blockquote>
+<p>The values are separated by a comma. You can either specifiy the variable
+by the name plus the value separated by an =, or you just go from left to
+right and set the values for the variables in the order they are defined.</p>
+<p>It is possible to combine both ways.</p>
 </section>
 <section id="options">
 <h2>Options:<a class="headerlink" href="#options" title="Permalink to this heading"></a></h2>

@@ -10,7 +10,6 @@ Welcome to Tuxpipes documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   readme
    tuxpipes
    pipes
    settings

@@ -39,9 +39,64 @@ The pipes.json and settings.json will be copied to
 
         $ /etc/tuxpipes/
 
-Usage
-=====
-Check the documentation under
+Usage:
+======
+The program expects at least one option/argument or an input_string
+(pipeline)
+
+        "python tuxpipes.py [options] [input_string]"
+
+        "tuxpipes [options] [input_string]"
+
+Syntax
+======
+
+The syntax for a tuxpipe pipeline is as follows:
+
+        <name>:<element1>:<element2>:...:<elementN>
+
+The name is used to call the pipeline or use it in another pipeline.
+The elements can basically be everything -  other pipelines, gstreamer
+elements or just placeholder variables.
+
+Variables inside pipes begin with an "#" followed by the name followed by 
+an "=" followed by an optional default value.
+
+        #<name>=<default value>
+
+To set the value for the variable when calling the pipeline add a bracket
+element after the actual pipeline, separated by an :
+
+        <pipeline_name>:(720,480,#FRAMERATE=30,#DEVICENUM=3)
+
+The values are separated by a comma. You can either specifiy the variable
+by the name plus the value separated by an =, or you just go from left to
+right and set the values for the variables in the order they are defined.
+
+It is possible to combine both ways.
+
+Options:
+========
+-h, --help                          Show the help message and exit
+
+-a, --add  <input_string>           Add a new pipeline
+
+-d, --delete <pipe_name>            Delete a pipeline
+
+-r, --rename <old_name new_name>    Rename a pipeline
+
+-l, --list <filter>                 List all pipelines
+
+-i, --info <pipe_name>              Show information about a pipeline
+
+-o, --output <pipe_name>            Create an output file containing the pipeline command
+
+-y, --yes                           Answer yes to all questions
+
+-n, --no                            Answer no to all questions
+
+-c, --commands <FILENAME>           Specify a pre commands file (executed before the pipeline)
+
+For all command line options call -h / --help or check the docs.
 
         tuxpipes -> docs -> html -> index.html
-
