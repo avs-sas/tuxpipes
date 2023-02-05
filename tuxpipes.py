@@ -42,6 +42,8 @@ element after the actual pipeline.
 The values are separated by a comma. The script first tries to set all 
 specific variables and then goes from left to right.
 
+**Note:** Variables a quite limited. It only goes one layer deep for now!
+
 Examples:
 =========
 gst:
