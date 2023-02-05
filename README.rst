@@ -72,6 +72,28 @@ element after the actual pipeline.
 The values are separated by a comma. The script first tries to set all 
 specific variables and then goes from left to right.
 
+Examples:
+=========
+gst:
+
+        "gst:gst-launch-1.0 #OPTIONS="
+
+device:
+
+        "dev:v4l2src device=/dev/video#DEVNUM=3"
+
+gstdev:
+
+        "gst:gst-launch-1.0 v4l2src device=/dev/video#DEVNUM=3 #OPTIONS="
+
+vidxraw720:
+
+        "vidxraw720:video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1"
+
+example:
+
+        "example:gstdev:vidxraw720:#CONVERTER=videoconvert:#SINK=waylandsink"
+
 Options:
 ========
 -h, --help      Show the help message and exit

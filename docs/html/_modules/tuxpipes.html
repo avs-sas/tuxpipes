@@ -111,6 +111,28 @@
 
 <span class="sd">The values are separated by a comma. The script first tries to set all </span>
 <span class="sd">specific variables and then goes from left to right.</span>
+
+<span class="sd">Examples:</span>
+<span class="sd">=========</span>
+<span class="sd">gst:</span>
+
+<span class="sd">        &quot;gst:gst-launch-1.0 #OPTIONS=&quot;</span>
+
+<span class="sd">device:</span>
+
+<span class="sd">        &quot;dev:v4l2src device=/dev/video#DEVNUM=3&quot;</span>
+
+<span class="sd">gstdev:</span>
+
+<span class="sd">        &quot;gst:gst-launch-1.0 v4l2src device=/dev/video#DEVNUM=3 #OPTIONS=&quot;</span>
+
+<span class="sd">vidxraw720:</span>
+
+<span class="sd">        &quot;vidxraw720:video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1&quot;</span>
+
+<span class="sd">example:</span>
+
+<span class="sd">        &quot;example:gstdev:vidxraw720:#CONVERTER=videoconvert:#SINK=waylandsink&quot;</span>
 <span class="sd">    </span>
 <span class="sd">Options:</span>
 <span class="sd">========</span>

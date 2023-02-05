@@ -45,6 +45,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#tuxpipes">tuxpipes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#usage">Usage:</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#syntax">Syntax:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#examples">Examples:</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#options">Options:</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tuxpipes.TuxPipes"><code class="docutils literal notranslate"><span class="pre">TuxPipes</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#tuxpipes.TuxPipes.add_pipeline"><code class="docutils literal notranslate"><span class="pre">TuxPipes.add_pipeline()</span></code></a></li>
@@ -154,6 +155,29 @@ element after the actual pipeline.</p>
 </div></blockquote>
 <p>The values are separated by a comma. The script first tries to set all 
 specific variables and then goes from left to right.</p>
+</section>
+<section id="examples">
+<h2>Examples:<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<p>gst:</p>
+<blockquote>
+<div><p>“gst:gst-launch-1.0 #OPTIONS=”</p>
+</div></blockquote>
+<p>device:</p>
+<blockquote>
+<div><p>“dev:v4l2src device=/dev/video#DEVNUM=3”</p>
+</div></blockquote>
+<p>gstdev:</p>
+<blockquote>
+<div><p>“gst:gst-launch-1.0 v4l2src device=/dev/video#DEVNUM=3 #OPTIONS=”</p>
+</div></blockquote>
+<p>vidxraw720:</p>
+<blockquote>
+<div><p>“vidxraw720:video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1”</p>
+</div></blockquote>
+<p>example:</p>
+<blockquote>
+<div><p>“example:gstdev:vidxraw720:#CONVERTER=videoconvert:#SINK=waylandsink”</p>
+</div></blockquote>
 </section>
 <section id="options">
 <h2>Options:<a class="headerlink" href="#options" title="Permalink to this heading"></a></h2>
