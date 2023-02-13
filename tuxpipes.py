@@ -42,6 +42,8 @@ element after the actual pipeline.
 The values are separated by a comma. The script first tries to set all 
 specific variables and then goes from left to right.
 
+**Note:** Variables a quite limited. It only goes one layer deep for now!
+
 Examples:
 =========
 gst:
@@ -105,14 +107,14 @@ INPUT = "input"
 TUXPIPE = "tuxpipe"
 
 DEFAULT_PIPES = {
-    "dev": {
+    "devsrc": {
         "input": "dev:v4l2src device=/dev/video#DEVNUM=3",
         "tuxpipe": "v4l2src device=/dev/video#DEVNUM=3",
         "elements": ["v4l2src device=/dev/video#DEVNUM=3"],
         "variables": {"#DEVNUM": 3},
         "subpipelines": [],
     },
-    "file": {
+    "filesrc": {
         "input": "file:filesrc location=#PATH=",
         "tuxpipe": "filesrc location=#PATH=",
         "elements": ["filesrc location=#PATH="],
@@ -133,7 +135,7 @@ DEFAULT_PIPES = {
         "variables": {"#OPTIONS": ""},
         "subpipelines": [],
     },
-    "gstdev": {
+    "gstdevsrc": {
         "input": "gst:gst-launch-1.0 v4l2src device=/dev/video#DEVNUM=3 #OPTIONS=",
         "tuxpipe": "gst-launch-1.0 v4l2src device=/dev/video#DEVNUM=3 #OPTIONS=",
         "elements": ["gst-launch-1.0 v4l2src device=/dev/video#DEVNUM=3 #OPTIONS="],
@@ -1180,8 +1182,10 @@ class TuxPipes:
             # Check if variable input values are provided
             # (only works for know pipelines)
             if "(" in element:
+                print("input variables provided")
                 element, input_variables_string = element[:-1].split("(")
-                input_variables = input_variables_string.split(";")
+                input_variables = input_variables_string.split(",")
+                print(input_variables)
                 # Check if lement is known pipe
                 if element not in self.pipes.keys():
                     error(f"Variables provided for unknown pipe: {element}")
@@ -1203,7 +1207,10 @@ class TuxPipes:
                 if "#" in val:
                     specific_values[val.split("=")[0]] = val.split("=")[-1]
                 else:
-                    unspecific_values.append(val)
+                    if val in self.pipes.keys():
+                        unspecific_values.append(self.pipes[val][TUXPIPE])
+                    else:
+                        unspecific_values.append(val)
 
             # insert specifc values first
             for var, val in specific_values.items():

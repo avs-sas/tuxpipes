@@ -156,5 +156,62 @@
             "#H": "1080",
             "#F": "10/1"
         }
+    },
+    "tut_testsrc": {
+        "input": "tut_testsrc:videotestsrc",
+        "elements": [
+            "videotestsrc"
+        ],
+        "subpipelines": [],
+        "tuxpipe": "videotestsrc",
+        "variables": {}
+    },
+    "tut_video": {
+        "input": "tut_video:filesrc location=./files/avs720qb.avi:decodebin:videoconvert",
+        "elements": [
+            "filesrc location=./files/avs720qb.avi",
+            "decodebin",
+            "videoconvert"
+        ],
+        "subpipelines": [],
+        "tuxpipe": "filesrc location=./files/avs720qb.avi:decodebin:videoconvert",
+        "variables": {}
+    },
+    "tut_camera": {
+        "input": "tut_camera:v4l2src device=/dev/video0:video/x-raw,width=640,height=480:videoconvert",
+        "elements": [
+            "v4l2src device=/dev/video0",
+            "video/x-raw,width=640,height=480",
+            "videoconvert"
+        ],
+        "subpipelines": [],
+        "tuxpipe": "v4l2src device=/dev/video0:video/x-raw,width=640,height=480:videoconvert",
+        "variables": {}
+    },
+    "tut_image": {
+        "input": "tut_image:filesrc location=./files/Avnet_Silica_SaS.png:pngdec:imagefreeze:videoconvert",
+        "elements": [
+            "filesrc location=./files/Avnet_Silica_SaS.png",
+            "pngdec",
+            "imagefreeze",
+            "videoconvert"
+        ],
+        "subpipelines": [],
+        "tuxpipe": "filesrc location=./files/Avnet_Silica_SaS.png:pngdec:imagefreeze:videoconvert",
+        "variables": {}
+    },
+    "tut_compositor": {
+        "input": "tut_compositor:gst-launch-1.0 compositor name=c sink_0::xpos=0 sink_0::ypos=0 sink_0::width=960 sink_0::height=540 sink_0::keep-ratio=true sink_1::xpos=960 sink_1::ypos=0 sink_1::width=960 sink_1::height=540 sink_1::keep-ratio=true sink_2::xpos=0 sink_2::ypos=540 sink_2::width=960 sink_2::height=540 sink_2::keep-ratio=true sink_3::xpos=960 sink_3::ypos=540 sink_3::width=960 sink_3::height=540 sink_3::keep-ratio=true ! autovideosink #SRC0= ! c.sink_0 #SRC1= ! c.sink_1 #SRC2= ! c.sink_2 #SRC3= ! c.sink_3",
+        "elements": [
+            "gst-launch-1.0 compositor name=c sink_0::xpos=0 sink_0::ypos=0 sink_0::width=960 sink_0::height=540 sink_0::keep-ratio=true sink_1::xpos=960 sink_1::ypos=0 sink_1::width=960 sink_1::height=540 sink_1::keep-ratio=true sink_2::xpos=0 sink_2::ypos=540 sink_2::width=960 sink_2::height=540 sink_2::keep-ratio=true sink_3::xpos=960 sink_3::ypos=540 sink_3::width=960 sink_3::height=540 sink_3::keep-ratio=true ! autovideosink #SRC0= ! c.sink_0 #SRC1= ! c.sink_1 #SRC2= ! c.sink_2 #SRC3= ! c.sink_3"
+        ],
+        "subpipelines": [],
+        "tuxpipe": "gst-launch-1.0 compositor name=c sink_0::xpos=0 sink_0::ypos=0 sink_0::width=960 sink_0::height=540 sink_0::keep-ratio=true sink_1::xpos=960 sink_1::ypos=0 sink_1::width=960 sink_1::height=540 sink_1::keep-ratio=true sink_2::xpos=0 sink_2::ypos=540 sink_2::width=960 sink_2::height=540 sink_2::keep-ratio=true sink_3::xpos=960 sink_3::ypos=540 sink_3::width=960 sink_3::height=540 sink_3::keep-ratio=true ! autovideosink #SRC0= ! c.sink_0 #SRC1= ! c.sink_1 #SRC2= ! c.sink_2 #SRC3= ! c.sink_3",
+        "variables": {
+            "#SRC0": "",
+            "#SRC1": "",
+            "#SRC2": "",
+            "#SRC3": ""
+        }
     }
 }
