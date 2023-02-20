@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384
 #TUXPIPES_GIT_PROTOCOL ?= "https"
 #TUXPIPES_GIT_BRANCH ?= "main"
 
-SRC_URI = "git://github.com/Software-and-Services/tuxpipes.git;branch=main;protocol=https;"
+SRC_URI = "git://github.com/avs-sas/tuxpipes.git;branch=main;protocol=https;"
 SRCREV = "${AUTOREV}"
 PV = "1.0+git${SRCPV}"
 
@@ -17,12 +17,11 @@ S = "${WORKDIR}/git"
 
 do_install:append() {
     install -d ${D}/usr/bin
-    install -m 0644 ${S}/tuxpipes.py ${D}/usr/bin/tuxpipes
-    install -d ${D}/etc/tuxpipes
-    install -m 0644 ${S}/pipes.json ${D}/etc/tuxpipes/pipes.json
-    install -m 0644 ${S}/pipes.json ${D}/etc/tuxpipes/settings.json
+    install -m 0755 ${S}/tuxpipes.py ${D}/usr/bin/tuxpipes
+    install -d ${D}/usr/share/tuxpipes
+    install -m 0644 ${S}/pipes.json ${D}/usr/share/tuxpipes/pipes.json
+    install -m 0644 ${S}/pipes.json ${D}/usr/share/tuxpipes/settings.json
 }
 
-FILES_${PN} += "/usr/bin/tuxpipes"
-FILES_${PN} += "/etc/tuxpipes/pipes.json"
-FILES_${PN} += "/etc/tuxpipes/settings.json"
+FILES_${PN} += "/usr/bin"
+FILES_${PN} += "/usr/share/tuxpipes"
