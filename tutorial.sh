@@ -3,6 +3,8 @@
 # intro
 echo "This is a tutorial for tuxpipes"
 echo -e "\t Best to run it from the tuxpipes main directory"
+echo -e "\t This will not work if you install it via recipe on a target yet (WIP)"
+echo -e "\t If you want to test it on a target you need to copy the repo to the target"
 # asked user if they want to continue
 echo "Do you want to continue? (y/n)"
 read answer
@@ -60,14 +62,8 @@ fi
 # print current sink
 echo ""
 echo "We use this sink from now on: $sink"
-# ask the user if they want to continue
-echo ""
-echo "Do you want to continue? (y/n)"
-read answer
-if [ $answer != "y" ]; then
-    echo "Exiting..."
-    exit 1
-fi
+# Press any key to continue
+read -n 1 -s -r -p "Press any key to continue"
 
 echo ""
 echo "If you want to change the size of the output window you need to set it"
@@ -108,14 +104,8 @@ echo "You can also filter the output like this:"
 echo -e "\n\tpython3 tuxpipes.py --list tut"
 python3 tuxpipes.py --list tut
 
-# ask the user if they want to continue
-echo ""
-echo "Do you want to continue? (y/n)"
-read answer
-if [ $answer != "y" ]; then
-    echo "Exiting..."
-    exit 1
-fi
+# Press any key to continue
+read -n 1 -s -r -p "Press any key to continue"
 
 echo ""
 echo "Lets now stream a video file to the display"
@@ -139,14 +129,8 @@ echo "But like before we leave out some parts"
 
 python3 tuxpipes.py --add "tut_video:filesrc location=./files/avs720qb.avi:decodebin:videoconvert"
 
-# ask the user if he wants to continue
-echo ""
-echo "Do you want to continue? (y/n)"
-read answer
-if [ $answer != "y" ]; then
-    echo "Exiting..."
-    exit 1
-fi
+# Press any key to continue
+read -n 1 -s -r -p "Press any key to continue"
 
 echo ""
 echo "Now comes a big one. Instead of displaying one source at a time we want to display multiple sources."
@@ -187,14 +171,8 @@ echo "You can add a default value after the '=' but you dont have to"
 # add the pipeline to tuxpipes
 python3 tuxpipes.py --add "tut_compositor:gst-launch-1.0 compositor name=c sink_0::xpos=0 sink_0::ypos=0 sink_0::width=960 sink_0::height=540 sink_0::keep-ratio=true sink_1::xpos=960 sink_1::ypos=0 sink_1::width=960 sink_1::height=540 sink_1::keep-ratio=true sink_2::xpos=0 sink_2::ypos=540 sink_2::width=960 sink_2::height=540 sink_2::keep-ratio=true sink_3::xpos=960 sink_3::ypos=540 sink_3::width=960 sink_3::height=540 sink_3::keep-ratio=true ! autovideosink #SRC0= ! c.sink_0 #SRC1= ! c.sink_1 #SRC2= ! c.sink_2 #SRC3= ! c.sink_3"
 
-# ask the user if he wants to continue
-echo ""
-echo "Do you want to continue? (y/n)"
-read answer
-if [ $answer != "y" ]; then
-    echo "Exiting..."
-    exit 1
-fi
+# Press any key to continue
+read -n 1 -s -r -p "Press any key to continue"
 
 echo ""
 echo "Before we run it, let me quickly add two more pipelines to tuxpipes"
@@ -218,29 +196,29 @@ echo -e "\n\t python3 tuxpipes.py --list tut"
 
 python3 tuxpipes.py --list tut
 
-# ask the user if he wants to continue
-echo ""
-echo "Do you want to continue? (y/n)"
-read answer
-if [ $answer != "y" ]; then
-    echo "Exiting..."
-    exit 1
-fi
+# Press any key to continue
+read -n 1 -s -r -p "Press any key to continue"
 
 echo ""
 echo "Now we can combine our pipelines to fill the compositor we created"
 echo "for this, we just need to set the variables. We use the source pipelines we created to fill the compositor"
 echo "Variables are defined by adding brackets after the name of a pipeline"
-echo "In the brackets you can define the variables you want to set, separated by a comma"
+echo "In the brackets you can define the variables you want to set, separated by a semicolon"
 echo "The variables are defined by the name of the variable (with #) followed by a '=' and the value"
 echo "or you just go from left to right (you can also combine both ways)"
 echo "Our command looks like this:"
-echo -e "\n\t python3 tuxpipes.py 'tut_compositor(tut_testsrc,tut_camera,tut_image,tut_video)'"
+echo -e "\n\t python3 tuxpipes.py 'tut_compositor(tut_testsrc;#SRC2=tut_camera;tut_image;tut_video)'"
 
 # ask the user if he wants to run the pipeline
 echo ""
 echo "Do you want to run the pipeline? (y/n)"
 read answer
 if [ $answer = "y" ]; then
-    python3 tuxpipes.py "tut_compositor(tut_testsrc,tut_camera,tut_image,tut_video)"
+    python3 tuxpipes.py "tut_compositor(tut_testsrc;#SRC2=tut_camera;tut_image;tut_video)"
 fi
+
+echo ""
+echo "You can delete a pipeline with the following command:"
+echo -e "\n\t python3 tuxpipes.py --delete tut_compositor"
+echo ""
+echo "That's it for this tutorial."
