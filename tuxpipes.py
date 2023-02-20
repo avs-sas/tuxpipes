@@ -1199,6 +1199,7 @@ class TuxPipes:
                     element_variables = self.pipes[element][VARIABLES]
                 else:
                     element_tuxpipe = element
+                    element_variables = {}
 
             # Separate values
             specific_values = {}
@@ -1224,6 +1225,7 @@ class TuxPipes:
                     element_variables.pop(var, None)
 
             # insert unspecific values
+            print(element_variables)
             for var, default_value in element_variables.items():
                 current_value = ""
                 replacement = f"{var}={default_value}"
@@ -1231,11 +1233,11 @@ class TuxPipes:
                     current_value = unspecific_values.pop(0)
                 if current_value != "":
                     element_tuxpipe = element_tuxpipe.replace(
-                        replacement, current_value
+                        replacement, str(current_value)
                     )
                 else:
                     element_tuxpipe = element_tuxpipe.replace(
-                        replacement, default_value
+                        replacement, str(default_value)
                     )
 
             tux_pipes.append(element_tuxpipe)
