@@ -34,12 +34,12 @@ an "=" followed by an optional default value.
 
         #<name>=<default value>
 
-To set the value for the variable when calling the pipeline add a bracket
-element after the actual pipeline.
+To set the value for the variable when calling the pipeline define them 
+inside brackets after the name of the pipeline or an element.
 
-        <pipeline_name>(720,480,#FRAMERATE=30,#DEVICENUM=3)
+        <pipeline_name>(720;480;#FRAMERATE=30;#DEVICENUM=3)
 
-The values are separated by a comma. The script first tries to set all 
+The values are separated by a semicolons. The script first tries to set all 
 specific variables and then goes from left to right.
 
 **Note:** Variables a quite limited. It only goes one layer deep for now!
@@ -400,7 +400,7 @@ def create_parser():
     parser = ArgumentParser()
     # basic arguement for calling a pipeline
     parser.add_argument(
-        "input_string", nargs="?", help="Input format: PIPE_ELEMENT[:PIPE_ELEMENT]*"
+        "input_string", nargs="?", help="Input format: PIPE_NAME[:PIPE_ELEMENT]*"
     )
     # option for adding a new pipeline
     parser.add_argument(
@@ -563,8 +563,7 @@ class TuxPipes:
         self.cwd = os.getcwd()
         self.pipes_json_path = None
         self.settings_json_path = None
-        self.default_path = "/etc/tuxpipes/"
-        create_default_path_dir(self.default_path)
+        self.default_path = "/usr/share/tuxpipes/"
         self.check_files()
         self.pipes = {}
         self.pipes = self.read_pipes_json()
@@ -586,25 +585,27 @@ class TuxPipes:
 
         if os.path.isfile("pipes.json"):
             self.pipes_json_path = os.path.join(self.cwd, "pipes.json")
+            warn("Using pipes.json file in the current working directory.")
         elif os.path.isfile(os.path.join(self.default_path, "pipes.json")):
-            warn("No pipes.json file found in the current working directory.")
             self.pipes_json_path = os.path.join(self.default_path, "pipes.json")
             success("Found pipes.json file in the default path.")
         else:
             warn(f"No pipes.json file found in the default path. {self.default_path}")
+            create_default_path_dir(self.default_path)
             self.create_default_pipes_json(self.default_path)
             self.pipes_json_path = os.path.join(self.default_path, "pipes.json")
             success("Created pipes.json file in the default path.")
         if os.path.isfile("settings.json"):
             self.settings_json_path = os.path.join(self.cwd, "settings.json")
+            warn("Using settings.json file in the current working directory.")
         elif os.path.isfile(os.path.join(self.default_path, "settings.json")):
-            warn("No settings.json file found in the current working directory.")
             self.settings_json_path = os.path.join(self.default_path, "settings.json")
             success("Found settings.json file in the default path.")
         else:
             warn(
                 f"No settings.json file found in the default path. {self.default_path}"
             )
+            create_default_path_dir(self.default_path)
             self.create_settings_json(self.default_path)
             self.settings_json_path = os.path.join(self.default_path, "settings.json")
             success("Created settings.json file in the default path.")
@@ -1180,13 +1181,12 @@ class TuxPipes:
             element_variables = []
 
             # Check if variable input values are provided
-            # (only works for know pipelines)
+            # (only works for known pipelines)
             if "(" in element:
                 print("input variables provided")
                 element, input_variables_string = element[:-1].split("(")
-                input_variables = input_variables_string.split(",")
-                print(input_variables)
-                # Check if lement is known pipe
+                input_variables = input_variables_string.split(";")
+                # Check if element is known pipe
                 if element not in self.pipes.keys():
                     error(f"Variables provided for unknown pipe: {element}")
                     exit()
@@ -1206,6 +1206,8 @@ class TuxPipes:
             for val in input_variables:
                 if "#" in val:
                     specific_values[val.split("=")[0]] = val.split("=")[-1]
+                    if specific_values[val.split("=")[0]] in self.pipes.keys():
+                        specific_values[val.split("=")[0]] = self.pipes[val.split("=")[-1]][TUXPIPE]
                 else:
                     if val in self.pipes.keys():
                         unspecific_values.append(self.pipes[val][TUXPIPE])
