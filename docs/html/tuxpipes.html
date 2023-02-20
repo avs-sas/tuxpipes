@@ -148,12 +148,12 @@ an “=” followed by an optional default value.</p>
 <blockquote>
 <div><p>#&lt;name&gt;=&lt;default value&gt;</p>
 </div></blockquote>
-<p>To set the value for the variable when calling the pipeline add a bracket
-element after the actual pipeline.</p>
+<p>To set the value for the variable when calling the pipeline define them 
+inside brackets after the name of the pipeline or an element.</p>
 <blockquote>
-<div><p>&lt;pipeline_name&gt;(720,480,#FRAMERATE=30,#DEVICENUM=3)</p>
+<div><p>&lt;pipeline_name&gt;(720;480;#FRAMERATE=30;#DEVICENUM=3)</p>
 </div></blockquote>
-<p>The values are separated by a comma. The script first tries to set all 
+<p>The values are separated by a semicolons. The script first tries to set all 
 specific variables and then goes from left to right.</p>
 <p><strong>Note:</strong> Variables a quite limited. It only goes one layer deep for now!</p>
 </section>
