@@ -157,12 +157,12 @@ DEFAULT_PIPES = {
         "subpipelines": [],
     },
     "vidxraw720": {
-        "input": "vidxraw720:video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1",
-        "tuxpipe": "video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1",
+        "input": "vidxraw720:video/x-raw,width=#WIDTH=720,height=#HEIGHT=480",
+        "tuxpipe": "video/x-raw,width=#WIDTH=720,height=#HEIGHT=480",
         "elements": [
             "video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1"
         ],
-        "variables": {"#WIDTH": "720", "#HEIGHT": "480", "#FRAMERATE": "20"},
+        "variables": {"#WIDTH": "720", "#HEIGHT": "480"},
         "subpipelines": [],
     },
     "example": {

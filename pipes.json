@@ -80,40 +80,38 @@
         "subpipelines": []
     },
     "vidxraw720": {
-        "input": "vidxraw720:video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1",
-        "tuxpipe": "video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1",
+        "input": "vidxraw720:video/x-raw,width=#WIDTH=720,height=#HEIGHT=480",
         "elements": [
-            "video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1"
+            "video/x-raw,width=#WIDTH=720,height=#HEIGHT=480"
         ],
+        "subpipelines": [],
+        "tuxpipe": "video/x-raw,width=#WIDTH=720,height=#HEIGHT=480",
         "variables": {
             "#WIDTH": "720",
-            "#HEIGHT": "480",
-            "#FRAMERATE": "20"
-        },
-        "subpipelines": []
+            "#HEIGHT": "480"
+        }
     },
     "example": {
         "input": "example:gstdev:vidxraw720:#CONVERTER=videoconvert:#SINK=waylandsink",
-        "tuxpipe": "gst-launch-1.0 v4l2src device=/dev/video#DEVNUM=3 #OPTIONS=:video/x-raw,width=#WIDTH=720,height=#HEIGHT=480,framerate=#FRAMERATE=20/1:#CONVERTER=videoconvert:#SINK=waylandsink",
         "elements": [
-            "gst",
-            "videoxraw720",
+            "gst-launch-1.0 v4l2src device=/dev/video#DEVNUM=3 #OPTIONS=",
+            "video/x-raw,width=#WIDTH=720,height=#HEIGHT=480",
             "#CONVERTER=videoconvert",
             "#SINK=waylandsink"
         ],
+        "subpipelines": [
+            "gstdev",
+            "vidxraw720"
+        ],
+        "tuxpipe": "gst-launch-1.0 v4l2src device=/dev/video#DEVNUM=3 #OPTIONS=:video/x-raw,width=#WIDTH=720,height=#HEIGHT=480:#CONVERTER=videoconvert:#SINK=waylandsink",
         "variables": {
             "#DEVNUM": "3",
             "#OPTIONS": "",
             "#WIDTH": "720",
             "#HEIGHT": "480",
-            "#FRAMERATE": "20",
             "#CONVERTER": "videoconvert",
             "#SINK": "waylandsink"
-        },
-        "subpipelines": [
-            "gst",
-            "vidxraw720"
-        ]
+        }
     },
     "composeLR": {
         "input": "composeLR:gst:#COMPOSITOR=compositor name=c sink_1::xpos=#XPOS1=0 sink_1::ypos=#YPOS1=0 sink_1::width=#WIDTH1=720 sink_1::height=#HEIGHT1=480 sink_2::xpos=#XPOS2=0 sink_2::ypos=#YPOS2=720 sink_2::width=#WIDTH2=720 sink_2::height=#HEIGHT2=480.#SINK=waylandsink #INPUTPIPE1= ! c.sink_1 #INPUTPIPE2=  ! c.sink2",
